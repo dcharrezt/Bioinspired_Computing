@@ -94,11 +94,7 @@ def selecting_next_population():
 	c = 0
 	for i,x in zip(data,range(len(data))):
 		tmp.append([x, i[1]])
-	print("not sorted")
-	print(tmp)
 	tmp = sorted(tmp, key=itemgetter(1), reverse=True)
-	print("sorted")
-	print(tmp)
 	ms = []
 	for i in range(n_population):
 		print(data[tmp[i][0]])
@@ -106,7 +102,7 @@ def selecting_next_population():
 	data = ms
 1
 def genetic_algorithm():
-
+	global data
 	generate_population(n_population, cromosome_size)
 	eval_population()
 
@@ -114,16 +110,17 @@ def genetic_algorithm():
 		print("\n\nIteration " + str(i) + " :\n\n")
 		print("Evaluating individuals:")
 		print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data ))
-
+		tmp = []
 		while(True):
-
-			if( len(data) >= n_population*2):
+			if( len(data) + len(tmp) >= n_population*2):
 				break
 			selected = roulette_selection()
 			offspring = one_point_crossover(cross_point, selected[0], selected[1])
 			for i in offspring:
 				b = BitArray(i)
-				data.append([i,[b.uint]])
+				tmp.append([i,[b.uint]])
+		for i in tmp:
+			data.append(i)
 		selecting_next_population()
 	print("Evaluating individuals:")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data ))
