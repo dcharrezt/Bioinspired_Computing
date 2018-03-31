@@ -3,19 +3,18 @@ from bitstring import BitArray
 import random
 from operator import itemgetter
 
-
 n_population = 4
 cromosome_size = 5
 iterations = 30
 cross_prob = 0.9
-cross_point = 3
+cross_point_1 = 1
+cross_point_2 = 3
 mutation_prob = 0.05
-# f(x) = x^2
 
 data = []
 
 def fitness_function(x):
-	return x*x
+	return (-(x*x)/10) + 3*x
 
 def generate_population(n_population, cromosome_size):
 	population =  []
@@ -67,18 +66,21 @@ def roulette_selection():
 
 	return selected
 
-def one_point_crossover(cross_point, mother_index, father_index):
+def two_point_crossover(cross_point_1, cross_point_2, mother_index, father_index):
 	offpsring = []
 
-	print("One point crossover in "+str(cross_point))
+	print("Two point crossover between "+str(cross_point_1)+" and "+str(cross_point_2))
 	mother_cromosome = data[mother_index][0]
 	father_cromosome = data[father_index][0]
 
-	son_1 = np.concatenate([mother_cromosome[0:cross_point], \
-						father_cromosome[cross_point:]])
-	son_2 = np.concatenate([father_cromosome[0:cross_point], \
-						mother_cromosome[cross_point:]])
+	son_1 = np.array(mother_cromosome[:cross_point_1].tolist() + \
+					father_cromosome[cross_point_1:cross_point_2].tolist() +\
+					mother_cromosome[cross_point_2:].tolist())
 
+	son_2 = np.array(father_cromosome[:cross_point_1].tolist() + \
+				mother_cromosome[cross_point_1:cross_point_2].tolist() +\
+				father_cromosome[cross_point_2:].tolist())
+	
 	print(*son_1, sep='')
 	print(*son_2, sep='')
 
@@ -115,7 +117,8 @@ def genetic_algorithm():
 				break
 			if( random.uniform(0,100) <= cross_prob*100 ): # Crossove Prob
 				selected = roulette_selection()
-				offspring = one_point_crossover(cross_point, selected[0], selected[1])
+				offspring = two_point_crossover(cross_point_1, cross_point_2, \
+												selected[0], selected[1])
 				for son in offspring:
 					if( random.uniform(0,100) <= mutation_prob*100 ): # Mutation Prob
 						print("Mutation")
