@@ -87,6 +87,7 @@ def one_point_crossover(cross_point, mother_index, father_index):
 	return offpsring
 
 def selecting_next_population():
+	global data
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
 	tmp = []
@@ -95,21 +96,22 @@ def selecting_next_population():
 		tmp.append([x, i[1]])
 	print("not sorted")
 	print(tmp)
-	tmp = sorted(tmp, key=itemgetter(1))
+	tmp = sorted(tmp, key=itemgetter(1), reverse=True)
 	print("sorted")
 	print(tmp)
 	ms = []
 	for i in range(n_population):
-		print(tmp[i][0])
-		del data[tmp[i][0]]
-
+		print(data[tmp[i][0]])
+		ms.append(data[tmp[i][0]])
+	data = ms
+1
 def genetic_algorithm():
 
 	generate_population(n_population, cromosome_size)
 	eval_population()
 
 	for i in range(iterations):
-		print("Iteration " + str(i) + " :")
+		print("\n\nIteration " + str(i) + " :\n\n")
 		print("Evaluating individuals:")
 		print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data ))
 
