@@ -10,6 +10,7 @@ cross_prob = 0.9
 cross_point_1 = 1
 cross_point_2 = 3
 mutation_prob = 0.05
+k_adversaries = 3
 
 data = []
 
@@ -32,31 +33,25 @@ def eval_population():
 		i.append([fitness_function(b.uint)]) # x^2
 	
 
-def get_parent(roulette_range):
-	selected = random.uniform(0,100)
-	for i in roulette_range:
-		if( i[0] <= selected and selected <=i[1] ):
-			index = roulette_range.index(i)
-			break
-	return index
-
-def roulette_selection():
+def get_parent(k_adversaries):
+	pool = len(data)
 	selected = []
 
-	total = sum([i[1][0] for i in data])
-	percents = [i[1][0]*100/total for i in data]
+	for i in range(k_adversaries):
+		tmp = random.randint(0, pool-1)
+		selected.append([tmp, data[tmp][1]])
 
-	print("Selecting by Roulette:")
-	print('\n'.join(' '.join(''.join( map(str, j)) for j in i) \
-						 + ' - '+str(ms)  for i, ms in zip(data, percents) ))
-	roulette_range = []
-	tmp = 0
-	for i in percents:
-		roulette_range.append([tmp, i+tmp])
-		tmp += i
+	index, value = max(enumerate([i[1] for i in selected]), key=itemgetter(1))
+	parent_index = selected[index][0]
+	return parent_index
+
+def tournament_selection(k_adversaries):
+	selected = []
+
+	print("Selecting by tournament:")
 	while(True):
-		mother_index = get_parent(roulette_range)
-		father_index = get_parent(roulette_range)
+		mother_index = get_parent(k_adversaries)
+		father_index = get_parent(k_adversaries)
 		if( mother_index != father_index):
 			selected.append(mother_index)
 			selected.append(father_index)
@@ -65,6 +60,7 @@ def roulette_selection():
 	print("Father: " + str(father_index))
 
 	return selected
+
 
 def two_point_crossover(cross_point_1, cross_point_2, mother_index, father_index):
 	offpsring = []
@@ -80,7 +76,7 @@ def two_point_crossover(cross_point_1, cross_point_2, mother_index, father_index
 	son_2 = np.array(father_cromosome[:cross_point_1].tolist() + \
 				mother_cromosome[cross_point_1:cross_point_2].tolist() +\
 				father_cromosome[cross_point_2:].tolist())
-	
+
 	print(*son_1, sep='')
 	print(*son_2, sep='')
 
@@ -93,7 +89,6 @@ def selecting_next_population():
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
 	tmp = []
-	c = 0
 	for i,x in zip(data,range(len(data))):
 		tmp.append([x, i[1]])
 	tmp = sorted(tmp, key=itemgetter(1), reverse=True)
@@ -116,7 +111,7 @@ def genetic_algorithm():
 			if( len(data) + len(tmp) >= n_population*2):
 				break
 			if( random.uniform(0,100) <= cross_prob*100 ): # Crossove Prob
-				selected = roulette_selection()
+				selected = tournament_selection(k_adversaries)
 				offspring = two_point_crossover(cross_point_1, cross_point_2, \
 												selected[0], selected[1])
 				for son in offspring:

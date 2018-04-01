@@ -91,7 +91,6 @@ def selecting_next_population():
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
 	tmp = []
-	c = 0
 	for i,x in zip(data,range(len(data))):
 		tmp.append([x, i[1]])
 	tmp = sorted(tmp, key=itemgetter(1), reverse=True)
