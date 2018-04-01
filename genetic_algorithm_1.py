@@ -14,10 +14,15 @@ mutation_prob = 0.05
 
 data = []
 
+
 def fitness_function(x):
+	"""returns function of x"""
 	return x*x
 
 def generate_population(n_population, cromosome_size):
+	""" Receives as inputs the individuals in a population and cromosome size
+    	then generates the population that is saved in the global varible data
+    """
 	population =  []
 	for i in range(0, n_population):
 		population.append(np.random.randint(2, size=cromosome_size))
@@ -27,6 +32,9 @@ def generate_population(n_population, cromosome_size):
 		data.append([i])
 
 def eval_population():
+	""" reads cromosomes from global variable data and saves to data the returns
+		of the function fitness_fuction that uses cromosomes as input
+    """
 	fitness = []
 	for i in data:
 		b = BitArray(i[0])
@@ -34,6 +42,9 @@ def eval_population():
 	
 
 def get_parent(roulette_range):
+	""" this function is used by roulette_selection to return to simulate the
+		behavior of a roulette
+	"""
 	selected = random.uniform(0,100)
 	for i in roulette_range:
 		if( i[0] <= selected and selected <=i[1] ):
@@ -42,6 +53,9 @@ def get_parent(roulette_range):
 	return index
 
 def roulette_selection():
+	""" using fitness values get the percents which are needed for the roulette
+		algorithm, calls get_parent to get the selected father and mother
+	"""
 	selected = []
 
 	total = sum([i[1][0] for i in data])
@@ -68,6 +82,8 @@ def roulette_selection():
 	return selected
 
 def one_point_crossover(cross_point, mother_index, father_index):
+	""" given a point mixes mother cromosome and father cromosome
+	"""
 	offpsring = []
 
 	print("One point crossover in "+str(cross_point))
@@ -87,6 +103,9 @@ def one_point_crossover(cross_point, mother_index, father_index):
 	return offpsring
 
 def selecting_next_population():
+	""" reduces the number of the population just surviving the strongest
+	"""
+
 	global data
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
@@ -100,6 +119,8 @@ def selecting_next_population():
 	data = ms
 
 def genetic_algorithm():
+	""" handles the flow between functions and counts iterations
+	"""
 	global data
 	generate_population(n_population, cromosome_size)
 	eval_population()

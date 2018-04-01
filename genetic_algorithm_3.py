@@ -18,9 +18,13 @@ print(*mask, sep='')
 data = []
 
 def fitness_function(x, y):
+	"""returns function of x"""
 	return x-y
 
 def generate_population(n_population, cromosome_size):
+	""" Receives as inputs the individuals in a population and cromosome size
+    	then generates the population that is saved in the global varible data
+    """
 	population =  []
 	for i in range(0, n_population):
 		population.append(np.random.randint(2, size=cromosome_size))
@@ -30,6 +34,9 @@ def generate_population(n_population, cromosome_size):
 		data.append([i])
 
 def eval_population():
+	""" reads cromosomes from global variable data and saves to data the returns
+		of the function fitness_fuction that uses cromosomes as input
+    """
 	fitness = []
 	for i in data:
 		x = BitArray(i[0][:5])
@@ -38,6 +45,9 @@ def eval_population():
 	
 
 def get_parent(k_adversaries):
+	""" picks randomly k elements from the population taking the winner the one with
+		more fitness value
+	"""
 	pool = len(data)
 	selected = []
 
@@ -50,6 +60,9 @@ def get_parent(k_adversaries):
 	return parent_index
 
 def tournament_selection(k_adversaries):
+	""" check if the mother and parent is the same tries again to finally return
+		the selected indexes
+	"""
 	selected = []
 
 	print("Selecting by tournament:")
@@ -67,6 +80,11 @@ def tournament_selection(k_adversaries):
 
 
 def uniform_crossover(mask, mother_index, father_index):
+	""" given a mask that is a string of 0's and 1's creates two new
+		cromosomes, takes one cromosome of the mother if the mask element is
+		1 and takes one cromosome of the father if the mask is 0, for the second
+		son does it the other way around
+	"""
 	offpsring = []
 	mother_cromosome = data[mother_index][0]
 	father_cromosome = data[father_index][0]
@@ -89,6 +107,8 @@ def uniform_crossover(mask, mother_index, father_index):
 	return offpsring
 
 def selecting_next_population():
+	""" reduces the number of the population just surviving the strongest
+	"""
 	global data
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
@@ -102,6 +122,8 @@ def selecting_next_population():
 	data = ms
 
 def genetic_algorithm():
+	""" handles the flow between functions and counts iterations
+	"""
 	global data
 	generate_population(n_population, cromosome_size)
 	eval_population()

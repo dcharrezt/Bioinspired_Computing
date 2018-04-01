@@ -15,9 +15,13 @@ k_adversaries = 3
 data = []
 
 def fitness_function(x):
+	"""returns function of x"""
 	return (-(x*x)/10) + 3*x
 
 def generate_population(n_population, cromosome_size):
+	""" Receives as inputs the individuals in a population and cromosome size
+    	then generates the population that is saved in the global varible data
+    """
 	population =  []
 	for i in range(0, n_population):
 		population.append(np.random.randint(2, size=cromosome_size))
@@ -27,6 +31,9 @@ def generate_population(n_population, cromosome_size):
 		data.append([i])
 
 def eval_population():
+	""" reads cromosomes from global variable data and saves to data the returns
+		of the function fitness_fuction that uses cromosomes as input
+    """
 	fitness = []
 	for i in data:
 		b = BitArray(i[0])
@@ -34,6 +41,10 @@ def eval_population():
 	
 
 def get_parent(k_adversaries):
+	""" picks randomly k elements from the population taking the winner the one with
+		more fitness value
+	"""
+
 	pool = len(data)
 	selected = []
 
@@ -46,6 +57,10 @@ def get_parent(k_adversaries):
 	return parent_index
 
 def tournament_selection(k_adversaries):
+	""" check if the mother and parent is the same tries again to finally return
+		the selected indexes
+	"""
+
 	selected = []
 
 	print("Selecting by tournament:")
@@ -63,6 +78,8 @@ def tournament_selection(k_adversaries):
 
 
 def two_point_crossover(cross_point_1, cross_point_2, mother_index, father_index):
+	""" given two points mixes mother cromosome and father cromosome
+	"""
 	offpsring = []
 
 	print("Two point crossover between "+str(cross_point_1)+" and "+str(cross_point_2))
@@ -85,6 +102,8 @@ def two_point_crossover(cross_point_1, cross_point_2, mother_index, father_index
 	return offpsring
 
 def selecting_next_population():
+	""" reduces the number of the population just surviving the strongest
+	"""
 	global data
 	print("Selecting next population")
 	print('\n'.join(' '.join(''.join(map(str, j))for j in i)for i in data))
@@ -98,6 +117,8 @@ def selecting_next_population():
 	data = ms
 
 def genetic_algorithm():
+	""" handles the flow between functions and counts iterations
+	"""
 	global data
 	generate_population(n_population, cromosome_size)
 	eval_population()
