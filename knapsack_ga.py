@@ -124,6 +124,28 @@ def uniform_crossover(mask, mother_index, father_index):
 	offpsring.append(son_2)
 	return offpsring
 
+def random_single_point_crossover(mother_index, father_index):
+	offspring = []
+
+	mother_cromosome = data[mother_index][0]
+	father_cromosome = data[father_index][0]
+
+	cross_point = random.randint(0,cromosome_size-1)
+
+	son_1 = np.concatenate([mother_cromosome[0:cross_point], \
+						father_cromosome[cross_point:]])
+	son_2 = np.concatenate([father_cromosome[0:cross_point], \
+						mother_cromosome[cross_point:]])
+
+	print(*son_1, sep='')
+	print(*son_2, sep='')
+
+	offspring.append(son_1)
+	offspring.append(son_2)
+	return offspring
+
+
+
 def selecting_next_population():
 	""" reduces the number of the population just surviving the strongest
 	"""
@@ -156,7 +178,7 @@ def genetic_algorithm():
 				break
 			if( random.uniform(0,100) <= cross_prob*100 ): # Crossove Prob
 				selected = tournament_selection(k_adversaries)
-				offspring = uniform_crossover(mask, selected[0], selected[1])
+				offspring = random_single_point_crossover(selected[0], selected[1])
 				for son in offspring:
 					if( random.uniform(0,100) <= mutation_prob*100 ): # Mutation Prob
 						print("Mutation")

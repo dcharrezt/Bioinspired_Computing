@@ -3,9 +3,9 @@ from bitstring import BitArray
 import random
 from operator import itemgetter
 
-n_population = 5
+n_population = 20
 cromosome_size = 10
-iterations = 30
+iterations = 50
 cross_prob = 0.9
 mutation_prob = 0.05
 k_adversaries = 3

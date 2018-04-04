@@ -5,7 +5,7 @@ from operator import itemgetter
 
 n_population = 4
 cromosome_size = 5
-iterations = 30
+iterations = 4
 cross_prob = 0.9
 cross_point_1 = 1
 cross_point_2 = 3
