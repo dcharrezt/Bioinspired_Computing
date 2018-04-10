@@ -168,18 +168,47 @@ def CX_crossover(mother_index, father_index):
 	mother_cromosome = data[mother_index][0]
 	father_cromosome = data[father_index][0]
 
-	son_1, son_2 = [], []
+	son_1 = [ -1 for i in range(cromosome_size)]
+	son_2 = [ -1 for i in range(cromosome_size)]
 
 	print(*son_1, sep='')
 	print(*son_2, sep='')
 	print()
 
-	for i in range(len(cromosome_size)):
-		son_1.
+	tmp = 0
+	son_1[tmp] = mother_cromosome[tmp]
 
+	while(True):
+		tmp_index = np.where(mother_cromosome == father_cromosome[tmp])[0][0]
+		son_1[tmp_index] = mother_cromosome[tmp_index]
+		tmp = tmp_index
+		if(father_cromosome[tmp] in son_1):
+			break
 
+	tmp = 0
+	son_2[tmp] = mother_cromosome[tmp]
 
+	while(True):
+		tmp_index = np.where(mother_cromosome == father_cromosome[tmp])[0][0]
+		son_2[tmp_index] = mother_cromosome[tmp_index]
+		tmp = tmp_index
+		if(father_cromosome[tmp] in son_2):
+			break
 
+	for i in range(cromosome_size):
+		if( son_1[i] == -1):
+			son_1[i] = mother_cromosome[i]
+		if( son_2[i] == -1):
+			son_2[i] = father_cromosome[i]
+
+	print(*son_1, sep='')
+	print(*son_2, sep='')
+
+	print()
+
+	offpsring.append(son_1)
+	offpsring.append(son_2)
+	return offpsring
 
 
 
@@ -282,14 +311,14 @@ def genetic_algorithm():
 				break
 			if( random.uniform(0,100) <= cross_prob*100 ): # Crossove Prob
 				selected = tournament_selection(k_adversaries)
-				offspring = PBX_crossover(selected[0], selected[1])
+				offspring = CX_crossover(selected[0], selected[1])
 				for son in offspring:
 					if( random.uniform(0,100) <= mutation_prob*100 ): # Mutation Prob
 					 	print("Mutation")
 					 	rand_1 = random.randint(0,cromosome_size-1)
 					 	rand_2 = random.randint(0,cromosome_size-1)
 					 	print(son)
-					 	son[rand_1], son[rand_2] = son[rand_2], son[son_1]
+					 	son[rand_1], son[rand_2] = son[rand_2], son[rand_1]
 					 	print(son)
 					#   mutation for 0 and 1
 					# 	tmp_son = son
