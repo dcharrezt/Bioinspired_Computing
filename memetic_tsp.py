@@ -299,7 +299,6 @@ def first_option_mutation( son, H):
 			return best_son
 
 def ms_ra(son, H):
-
 	while(True):
 		there_is = False
 		son_fitm = function_fitness(son)
@@ -342,9 +341,7 @@ def genetic_algorithm():
 					print(str(function_fitness(son)))
 					print("Son to db:")
 					print(son)
-
 					tmp.append([son, [function_fitness(son) ]])
-
 		for i in tmp:
 			data.append(i)
 		selecting_next_population()
