@@ -197,7 +197,6 @@ def genetic_programing():
 
 	global data
 
-
 	L2 = (crossover_prob + reproduction_prob)
 	tol = 1e-12
 	counter = 0
