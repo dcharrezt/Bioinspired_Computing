@@ -1,14 +1,15 @@
 import numpy as np
 import random
 import math
+import copy
 from operator import itemgetter
 
 n_states = 4
 n_char_states = 7
-M = 100
+M = 30
 min_active_states = 2   # admitted in the population
 population = M
-n_iterations = 100
+n_iterations = 50
 
 fsm_input = [0,1,1,0,1,1,0,1,1,0,1,1,0,1,1]
 
@@ -30,11 +31,25 @@ def fitness_function( fsm_output ):
 
 def generate_state():
 	tmp_state = []
-	for i in range(n_char_states):
-		if( i < 5 ):
-			tmp_state.append( random.randint(0,1) )
-		else:
-			tmp_state.append( random.randint(0, n_states-1))
+	tmp_state.append( random.randint(0,1) )
+
+	tmp_state.append( random.randint(0,1) )
+
+	if( tmp_state[1] == 0):
+		tmp_state.append( 1 )
+	else:
+		tmp_state.append( 0 )
+
+	tmp_state.append( random.randint(0,1) )
+
+	if( tmp_state[3] == 0):
+		tmp_state.append( 1 )
+	else:
+		tmp_state.append( 0 )
+
+	tmp_state.append( random.randint(0, n_states-1))
+	tmp_state.append( random.randint(0, n_states-1))
+	print (tmp_state)
 	return tmp_state
 
 def initialize_population():
@@ -74,8 +89,15 @@ def evaluate_population( db ):
 
 		i[2]= fitness
 
+def valid_states( states ):
+	for i in states:
+		if( i[1] == i[2]):
+			return False
+	return True
+
+
 def mutation( individual ):
-	offspring = list(individual)
+	offspring = copy.deepcopy(individual)
 	mutation_prob = random.random()
 
 	if( mutation_prob <= deactivate_state ):
@@ -91,6 +113,7 @@ def mutation( individual ):
 	elif( change_output > mutation_prob <= active_state ):
 		offspring[0][random.randint(0, n_states-1)][0] = 1
 
+	print("offspring", offspring)
 	return offspring
 
 def ep_algorithm():
@@ -99,13 +122,18 @@ def ep_algorithm():
 
 	initialize_population()
 	
-
 	while( True ):
+		print("Iteration # ", iteration)
+
 		evaluate_population(data)
 		offspring = []
 		for i in data:
-			tmp = i[:]
-			offspring.append( mutation( tmp ) )
+			while(True):
+				tmp = copy.deepcopy( mutation(i) )
+				if( valid_states( tmp[0] ) ):
+					offspring.append(  tmp  )
+					break
+
 		evaluate_population(offspring)
 
 		survivors = []
@@ -126,17 +154,17 @@ def ep_algorithm():
 		for i in range( int(population / 2) ):
 			survivors.append( offspring[tmp_2[i][0]] )
 		
-		if( data[tmp_1[i][0]][2] <= 2  ):
+		if( data[tmp_1[i][0]][2] == 0  ):
 			print("FSM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 			print( data[tmp_1[i][0]] )
 			break
-		if( offspring[tmp_2[i][0]][2] <= 2):
+		if( offspring[tmp_2[i][0]][2] == 0):
 			print("FSM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 			print(offspring[tmp_2[i][0]])
 			break
 
 		data = []
-		data = survivors[:]
+		data = copy.deepcopy(survivors)
 		iteration += 1
 
 ep_algorithm()
