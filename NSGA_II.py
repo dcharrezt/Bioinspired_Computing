@@ -1,5 +1,7 @@
 import numpy as np
 import random
+import copy
+import matplotlib.pyplot as plt
 
 x_lower_limit = 0.
 x_upper_limit = 5.
@@ -10,9 +12,9 @@ y_upper_limit = 3.
 data = []
 
 n_functions = 2
-n_iterations = 2
-population_size = 10
-offspring_size = 5
+n_iterations = 100
+population_size = 15
+offspring_size = 10
 n_adversaries = 3
 beta = 0.5
 alpha = 1.
@@ -151,9 +153,13 @@ def crowding_distance( frontiers ):
 				if( len(m_sorted) > 2):
 					m_max = max(m_sorted, key=lambda item: item[1])[1]
 					m_min = min(m_sorted, key=lambda item: item[1])[1]
+					if( m_max - m_min == 0):
+						divisor = 10e-5
+					else:
+						divisor = m_max - m_min
 					for k in range(1, len(f)-1 ):
 						distance[k] += (m_sorted[k+1][1] - m_sorted[k-1][1]) / \
-									   (m_max - m_min)
+									   (divisor)
 			else:
 				distance[0] = 0
 		for i in range( len(f) ):
@@ -171,17 +177,17 @@ def crowded_tournament_selection(frontiers, distances):
 			c+=1
 	print("f\t",front)
 	
-	tmp = list( range( population_size ) )
+	tmp = list( range( len(data) ) )
 
-	print( tmp )
+	# print( tmp )
 
 	while( len(new_data) < population_size ):
 		perm_tmp = list(np.random.permutation( tmp ))
-		print( perm_tmp )
+		# print( perm_tmp )
 		rand_1 = perm_tmp[0]
 		rand_2 = perm_tmp[1]
-		print( rand_1 )
-		print( rand_2 )
+		# print( rand_1 )
+		# print( rand_2 )
 		if( front[rand_1] > front[rand_2] ):
 			new_data.append( data[rand_1] )
 			tmp.remove(rand_1)
@@ -200,12 +206,15 @@ def crowded_tournament_selection(frontiers, distances):
 
 
 def minimize_F():
+	global data
 	iteration = 0
 
 	generate_population()
 	evaluate_population()
 
 	while( iteration <= n_iterations ):
+
+		print("iteration #", iteration)
 
 		for i in range(offspring_size):
 
@@ -219,17 +228,31 @@ def minimize_F():
 
 			data.append( m_individual )
 
-			frontiers = non_dominated_sort()
-			distances = crowding_distance( frontiers )
-			
+		print("data\t", len(data))
+
+		frontiers = non_dominated_sort()
+		distances = crowding_distance( frontiers )
+
+		new_data = crowded_tournament_selection( frontiers, distances )
+		data = []
+		data = copy.deepcopy( new_data )
+
 
 		iteration += 1
 
+		for i in data:
+			print("fitness_1  ", i["fitness_1"], "\tfitness_2  ", i["fitness_2"])
+
 	print(data)
+	plt.plot([ i["fitness_1"] for i in data ], \
+				[i["fitness_2"] for i in data], 'ro')
+	# plt.axis([0, 6, 0, 20])
+	plt.show()
+
 
 
 if __name__ == "__main__":
-	# minimize_F()
+	minimize_F()
 	# generate_population()
 	# evaluate_population()
 	# asd = non_dominated_sort()

@@ -2,6 +2,7 @@ import math
 import random
 import numpy as np
 
+
 x_lower_limit = -10.
 x_upper_limit = 10.
 deviation = .3
