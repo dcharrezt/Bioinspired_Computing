@@ -11,7 +11,7 @@ data = []
 
 n_functions = 2
 n_iterations = 2
-population_size = 20
+population_size = 10
 offspring_size = 5
 n_adversaries = 3
 beta = 0.5
@@ -160,6 +160,44 @@ def crowding_distance( frontiers ):
 			distances[f[i]] = distance[i]
 	return distances
 
+def crowded_tournament_selection(frontiers, distances):
+	global data
+	new_data = []
+	front = dict()
+	c = 0
+	for i in range( len( frontiers) ):
+		for j in range( len(frontiers[i]) ):
+			front[c] = frontiers[i][j]
+			c+=1
+	print("f\t",front)
+	
+	tmp = list( range( population_size ) )
+
+	print( tmp )
+
+	while( len(new_data) < population_size ):
+		perm_tmp = list(np.random.permutation( tmp ))
+		print( perm_tmp )
+		rand_1 = perm_tmp[0]
+		rand_2 = perm_tmp[1]
+		print( rand_1 )
+		print( rand_2 )
+		if( front[rand_1] > front[rand_2] ):
+			new_data.append( data[rand_1] )
+			tmp.remove(rand_1)
+		elif( front[rand_1] < front[rand_2] ):
+			new_data.append( data[rand_2] )
+			tmp.remove(rand_2) 
+		elif( front[rand_1] == front[rand_2] ):
+			if( distances[rand_1] >= distances[rand_2] ):
+				new_data.append( data[rand_1] )
+				tmp.remove(rand_1) 
+			else:
+				new_data.append( data[rand_2] )
+				tmp.remove(rand_2) 
+
+	return new_data
+
 
 def minimize_F():
 	iteration = 0
@@ -181,6 +219,9 @@ def minimize_F():
 
 			data.append( m_individual )
 
+			frontiers = non_dominated_sort()
+			distances = crowding_distance( frontiers )
+			
 
 		iteration += 1
 
@@ -189,10 +230,12 @@ def minimize_F():
 
 if __name__ == "__main__":
 	# minimize_F()
-	generate_population()
-	evaluate_population()
-	asd = non_dominated_sort()
-	print(asd)
-	qwe = crowding_distance( asd )
-	print("D\t", qwe)
-	print("\n\n",data)
+	# generate_population()
+	# evaluate_population()
+	# asd = non_dominated_sort()
+	# print(asd)
+	# qwe = crowding_distance( asd )
+	# print("D\t", qwe)
+	# print("\n\n",data)
+
+	# print( crowded_tournament_selection( asd, qwe ) )

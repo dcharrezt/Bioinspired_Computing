@@ -174,4 +174,4 @@ if __name__ == "__main__":
 	ep_u_plus_lambda()
 	# ep_u_lambda()
 	# ep_u_1()
-	# print( fitness_function( 4.1180866324905363, 2.9631102046257594) )
+	# print( fitness_function( math.pi, math.pi) )
