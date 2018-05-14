@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 
 x_lower_limit = 0.
 x_upper_limit = 5.
@@ -7,6 +7,12 @@ x_upper_limit = 5.
 y_lower_limit = 0.
 y_upper_limit = 3.
 
+data = []
+
+population_size = 5
+n_adversaries = 3
+beta = 0.5
+alpha = 1.
 
 city_distances = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 				   [12, 0, 9, 18, 3, 41, 45, 5, 41, 27],
@@ -31,16 +37,51 @@ cost_between_cities = [ [0, 22, 47, 15, 63, 21, 23, 16, 11, 9],
 						[9, 43, 36, 12, 23, 14, 60, 85, 54, 0]]
 
 
+
 def function_1( x, y):
 	return 4*(x**2) + 4*(y**2)
 
 def function_2( x, y):
 	return (x-5)**2 + (y-5)**2
 
+def generate_individual():
+	return {"x": random.uniform(x_lower_limit, x_upper_limit), \
+			"y": random.uniform(y_lower_limit, y_upper_limit), \
+			"fitness_1": np.inf, \
+			"fitness_2": np.inf }
+
+def generate_population():
+	for i in range( population_size ):
+		data.append( generate_individual() )
+
+def evaluate_population():
+	for i in data:
+		data["fitness_1"] = function_1( data["x"], data["y"] )
+		data["fitness_2"] = function_2( data["x"], data["y"] )
+
+def tournament_selection( n_adversaries ):
+	adversaries = np.random.permutation( list( range( population_size ) ) )
+	tmp = [ data[i] for i in adversaries[:n_adversaries]]
+	return min(tmp, key=lambda item: item["fitness"])
+
+def BLX_crossover( parent_1, parent_2 ):
+	m_beta = random.uniform( beta - alpha, beta + alpha )
+	
+	m_x = parent_1["x"] + m_beta*( parent_2["x"] - parent_1["x"] )
+	m_y = parent_1["y"] + m_beta*( parent_2["y"] - parent_1["y"] )
+	m_1 = function_1( m_x, m_y )
+	m_2 = function_2( m_x, m_y )
+
+	return {"x": m_x, "y": m_y, "fitness_1": m_1, "fitness_2": m_2 }
 
 
+
+def minimize_F():
+	generate_individual()
 
 if __name__ == "__main__":
-	print( np.array(city_distances).shape )
-	print( np.array(cost_between_cities).shape )
+	BLX_crossover()
+	# print(generate_individual())
+	# print( np.array(city_distances).shape )
+	# print( np.array(cost_between_cities).shape )
 	print("hELLO wORLD")

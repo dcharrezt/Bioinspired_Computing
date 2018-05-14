@@ -35,7 +35,6 @@ def tournament_selection( n_adversaries ):
 	return min(tmp, key=lambda item: item["fitness"])
 
 def crossover( parent_1, parent_2):
-
 	xs = list([ .5*( parent_1["xs"][i] + parent_2["xs"][i] ) \
 						for i in range(len(parent_1["xs"])) ])
 	devs = list([ math.sqrt( parent_1["dev"][i] + parent_2["dev"][i] ) \
