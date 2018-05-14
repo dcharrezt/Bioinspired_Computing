@@ -9,8 +9,9 @@ y_upper_limit = 3.
 
 data = []
 
+n_functions = 2
 n_iterations = 2
-population_size = 5
+population_size = 20
 offspring_size = 5
 n_adversaries = 3
 beta = 0.5
@@ -133,7 +134,31 @@ def non_dominated_sort():
 					Q.append(q)
 		i += 1
 		frontiers.append( Q )
+	del frontiers[len(frontiers)-1]
 	return frontiers
+
+def crowding_distance( frontiers ):
+	distances = dict()
+	for f in frontiers:
+		distance = [ 0. ] * len(f)
+		for m in range( n_functions ):
+			m_sorted = [ [i, data[i]["fitness_"+str(m+1)]] for i in f ]
+			m_sorted = sorted( m_sorted, key=lambda x: x[1] )
+			if( len(m_sorted) > 1):
+				distance[0] = np.inf
+				distance[ len(f)-1 ] = np.inf
+
+				if( len(m_sorted) > 2):
+					m_max = max(m_sorted, key=lambda item: item[1])[1]
+					m_min = min(m_sorted, key=lambda item: item[1])[1]
+					for k in range(1, len(f)-1 ):
+						distance[k] += (m_sorted[k+1][1] - m_sorted[k-1][1]) / \
+									   (m_max - m_min)
+			else:
+				distance[0] = 0
+		for i in range( len(f) ):
+			distances[f[i]] = distance[i]
+	return distances
 
 
 def minimize_F():
@@ -166,5 +191,8 @@ if __name__ == "__main__":
 	# minimize_F()
 	generate_population()
 	evaluate_population()
-	print(non_dominated_sort())
-	print(data)
+	asd = non_dominated_sort()
+	print(asd)
+	qwe = crowding_distance( asd )
+	print("D\t", qwe)
+	print("\n\n",data)
