@@ -98,15 +98,42 @@ def dominate( individual_1, individual_2 ):
 			( individual_1["fitness_1"] >= individual_2["fitness_1"] and \
 			  individual_1["fitness_2"] > individual_2["fitness_2"] ) or \
 			( individual_1["fitness_1"] > individual_2["fitness_1"] and \
-			  individual_1["fitness_2"] >= individual_2["fitness_2"] ) )
+			  individual_1["fitness_2"] >= individual_2["fitness_2"] ) ):
 			return True
 		return False 
 
-# def non_dominated_sort():
-# 	for p in data:
-# 		S_p = []
-# 		N_p = 0
-# 		for q in data:
+def non_dominated_sort():
+	S = []
+	N = []
+	rank = []
+	frontiers = [[]]
+	
+	for i in range( len( data ) ):
+		S.append([])
+		N.append( 0 )
+		rank.append( 0 )
+
+	for p in  range(len( data )) :
+		for q in range(len( data )):
+			if( dominate(data[p], data[q]) ):
+				S[p].append(q)
+			elif( dominate( data[q], data[p]) ):
+				N[p] += 1
+		if(N[p] == 0):
+			rank[p] = 0
+			frontiers[0].append(p)
+	i = 0
+	while( frontiers[i] != [] ):
+		Q = []
+		for p in frontiers[i]:
+			for q in S[p]:
+				N[q] -= 1
+				if( N[q] == 0 ):
+					rank[q] = i+1
+					Q.append(q)
+		i += 1
+		frontiers.append( Q )
+	return frontiers
 
 
 def minimize_F():
@@ -118,6 +145,7 @@ def minimize_F():
 	while( iteration <= n_iterations ):
 
 		for i in range(offspring_size):
+
 			while(True):
 				m_individual = BLX_crossover( tournament_selection(), \
 											  tournament_selection() )
@@ -135,4 +163,8 @@ def minimize_F():
 
 
 if __name__ == "__main__":
-	minimize_F()
+	# minimize_F()
+	generate_population()
+	evaluate_population()
+	print(non_dominated_sort())
+	print(data)
