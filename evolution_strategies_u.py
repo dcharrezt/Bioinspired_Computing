@@ -9,7 +9,7 @@ deviation = .3
 individual_size = 2
 population_size = 10
 n_adversaries = 3
-n_iterations = 200
+n_iterations = 15
 
 infinite = -1.
 lim_inf = -4

@@ -12,8 +12,8 @@ y_upper_limit = 3.
 data = []
 
 n_functions = 2
-n_iterations = 100
-population_size = 15
+n_iterations = 250
+population_size = 20
 offspring_size = 10
 n_adversaries = 3
 beta = 0.5
@@ -43,6 +43,29 @@ cost_between_cities = [ [0, 22, 47, 15, 63, 21, 23, 16, 11, 9],
 						[9, 43, 36, 12, 23, 14, 60, 85, 54, 0]]
 
 
+n_cities = len( city_distances )
+
+def generate_individual_tsp():
+	return { "cm": np.random.permutation( n_cities ), "f_distance": np.inf, \
+					"f_cost": np.inf }
+
+def generate_population_tsp():
+	for i in range( population_size ):
+		data.append( generate_individual_tsp() )
+
+def fitness_distance( individual ):
+	total_distance = 0
+	for i in range( n_cities -1 ):
+		total_distance += city_distances[ individual["cm"][i] ]\
+										[ individual["cm"][i+1] ]
+	return total_distance
+
+def fitness_cost( individual ):
+	total_cost = 0
+	for i in range( n_cities -1 ):
+		total_cost += cost_between_cities[ individual["cm"][i] ]\
+										[ individual["cm"][i+1] ]
+	return total_cost
 
 def function_1( x, y):
 	return 4*(x**2) + 4*(y**2)
@@ -204,7 +227,6 @@ def crowded_tournament_selection(frontiers, distances):
 
 	return new_data
 
-
 def minimize_F():
 	global data
 	iteration = 0
@@ -249,10 +271,15 @@ def minimize_F():
 	# plt.axis([0, 6, 0, 20])
 	plt.show()
 
-
+def minimize_tsp():
+	generate_population_tsp()
+	print( data )
+	print( fitness_distance( data[0] ) )
+	print( fitness_cost( data[0] ) )
 
 if __name__ == "__main__":
-	minimize_F()
+	minimize_tsp()
+	# minimize_F()
 	# generate_population()
 	# evaluate_population()
 	# asd = non_dominated_sort()
