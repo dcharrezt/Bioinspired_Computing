@@ -9,11 +9,13 @@ y_upper_limit = 3.
 
 data = []
 
-n_iterations = 10
+n_iterations = 2
 population_size = 5
+offspring_size = 5
 n_adversaries = 3
 beta = 0.5
 alpha = 1.
+mutation_prob = 0.5   # .0 - 1.
 
 city_distances = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 				   [12, 0, 9, 18, 3, 41, 45, 5, 41, 27],
@@ -57,13 +59,13 @@ def generate_population():
 
 def evaluate_population():
 	for i in data:
-		data["fitness_1"] = function_1( data["x"], data["y"] )
-		data["fitness_2"] = function_2( data["x"], data["y"] )
+		i["fitness_1"] = function_1( i["x"], i["y"] )
+		i["fitness_2"] = function_2( i["x"], i["y"] )
 
-def tournament_selection( n_adversaries ):
+def tournament_selection():
 	adversaries = np.random.permutation( list( range( population_size ) ) )
 	tmp = [ data[i] for i in adversaries[:n_adversaries]]
-	return min(tmp, key=lambda item: item["fitness"])
+	return min(tmp, key=lambda item: item["fitness_1"])
 
 def BLX_crossover( parent_1, parent_2 ):
 	m_beta = random.uniform( beta - alpha, beta + alpha )
@@ -84,6 +86,29 @@ def uniform_mutation( individual ):
 	individual["fitness_1"] = function_1( individual["x"], individual["y"] )
 	individual["fitness_2"] = function_2( individual["x"], individual["y"] )
 
+def valid_individual( individual ):
+	if( x_lower_limit <= individual["x"] <= x_upper_limit and \
+		y_lower_limit <= individual["y"] <= y_upper_limit ):
+		return True
+	return False
+
+def dominate( individual_1, individual_2 ):
+		if( ( individual_1["fitness_1"] > individual_2["fitness_1"] and \
+			  individual_1["fitness_2"] > individual_2["fitness_2"] ) or \
+			( individual_1["fitness_1"] >= individual_2["fitness_1"] and \
+			  individual_1["fitness_2"] > individual_2["fitness_2"] ) or \
+			( individual_1["fitness_1"] > individual_2["fitness_1"] and \
+			  individual_1["fitness_2"] >= individual_2["fitness_2"] ) )
+			return True
+		return False 
+
+# def non_dominated_sort():
+# 	for p in data:
+# 		S_p = []
+# 		N_p = 0
+# 		for q in data:
+
+
 def minimize_F():
 	iteration = 0
 
@@ -92,13 +117,22 @@ def minimize_F():
 
 	while( iteration <= n_iterations ):
 
+		for i in range(offspring_size):
+			while(True):
+				m_individual = BLX_crossover( tournament_selection(), \
+											  tournament_selection() )
+				if( random.random() <= mutation_prob ):
+					uniform_mutation( m_individual )
+				if( valid_individual( m_individual ) ):
+					break	
+
+			data.append( m_individual )
+
+
 		iteration += 1
 
+	print(data)
 
 
 if __name__ == "__main__":
-	BLX_crossover()
-	# print(generate_individual())
-	# print( np.array(city_distances).shape )
-	# print( np.array(cost_between_cities).shape )
-	print("hELLO wORLD")
+	minimize_F()
