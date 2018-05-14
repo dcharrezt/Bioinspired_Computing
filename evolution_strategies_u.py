@@ -140,8 +140,39 @@ def ep_u_lambda():
 		iteration+=1
 	print(data)
 
+def ep_u_plus_lambda():
+	global data
+	iteration = 0
+	lambda_size = int(population_size*1.2)
+
+	generate_population( population_size )
+	evaluate_population()
+
+	while( iteration < n_iterations ):
+		print("iteration #", iteration)
+
+		for ms in range( lambda_size ):
+			while( True ):
+				new_individual = crossover( tournament_selection( n_adversaries ), \
+											tournament_selection( n_adversaries ) )
+				mutation(new_individual)
+				if( valid_individual(new_individual) ):
+					break
+			data.append( new_individual )
+
+		data = sorted( data, key=lambda x: x["fitness"] )
+
+		for ms in range( lambda_size ):
+			del data[ len(data) -1 ]
+
+		for i in range( population_size ):
+			print(data[i]["fitness"])
+
+		iteration+=1
+	print(data)
 
 if __name__ == "__main__":
-	ep_u_lambda()
+	ep_u_plus_lambda()
+	# ep_u_lambda()
 	# ep_u_1()
 	# print( fitness_function( 4.1180866324905363, 2.9631102046257594) )
