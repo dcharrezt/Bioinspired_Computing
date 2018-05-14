@@ -9,6 +9,7 @@ y_upper_limit = 3.
 
 data = []
 
+n_iterations = 10
 population_size = 5
 n_adversaries = 3
 beta = 0.5
@@ -74,10 +75,26 @@ def BLX_crossover( parent_1, parent_2 ):
 
 	return {"x": m_x, "y": m_y, "fitness_1": m_1, "fitness_2": m_2 }
 
+def uniform_mutation( individual ):
+	if( random.randint(0, 1) ):
+		individual["x"] = random.uniform(x_lower_limit, x_upper_limit)
+	else:
+		individual["y"] = random.uniform(y_lower_limit, y_upper_limit)
 
+	individual["fitness_1"] = function_1( individual["x"], individual["y"] )
+	individual["fitness_2"] = function_2( individual["x"], individual["y"] )
 
 def minimize_F():
-	generate_individual()
+	iteration = 0
+
+	generate_population()
+	evaluate_population()
+
+	while( iteration <= n_iterations ):
+
+		iteration += 1
+
+
 
 if __name__ == "__main__":
 	BLX_crossover()
