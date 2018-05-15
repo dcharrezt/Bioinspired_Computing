@@ -45,13 +45,13 @@ def print_matrix( matrix, text ):
 def initialize_pheromone_matrix():
 	for i in range( n_cities ):
 		for j in range( n_cities ):
-			if(j>i):
+			if(i!=j):
 				pheromone_matrix[i][j] = initial_pheromones
 
 def initialize_visibility_matrix():
 	for i in range( n_cities ):
 		for j in range( n_cities ):
-			if(j>i):
+			if(i!=j):
 				visibility_matrix[i][j] = 1.0 / distance_matrix[i][j]
 
 def next_city( m_prob, random_number):
@@ -93,24 +93,26 @@ def print_ant_results( path_list ):
 	return costs_lists
 
 def send_ants():
+	global first_city
 	path_list = []
+
 	for j in range( n_ants ):
 		print("Ant # ", j)
 		print("Initial city: A")
-
+		current_city = first_city
 		path = []
-		path.append( first_city )
+		path.append( current_city )
 		while( len(path) < n_cities ):
 			m_sum = 0
 			sums_list = []
 			for k in range( n_cities ):
 				if( k not in path ):
-					t = pheromone_matrix[first_city][k]
-					n = visibility_matrix[first_city][k]
+					t = pheromone_matrix[current_city][k]
+					n = visibility_matrix[current_city][k]
 					tn = t*n
 					sums_list.append( tn )
 					m_sum += tn
-					print( cities[first_city] + "-" + cities[k], end=' ' )
+					print( cities[current_city] + "-" + cities[k], end=' ' )
 					print( "t = ", t, end=' ' )
 					print( "n = ", n, end=' ' )
 					print( "t*n = ", tn )
@@ -120,7 +122,7 @@ def send_ants():
 			for k in range( n_cities ):
 				if( k not in path ):
 					m_prob.append( sums_list[k] / m_sum )
-					print( cities[first_city] + "-" + cities[k], end=' ' )
+					print( cities[current_city] + "-" + cities[k], end=' ' )
 					print( "Probabilty = ", sums_list[k] / m_sum)
 				else:
 					m_prob.append(-1)
@@ -128,6 +130,7 @@ def send_ants():
 			print( "Random number: ", random_number )
 			n_index = next_city( m_prob, random_number )
 			print("Next city: ", cities[n_index] )
+			current_city = n_index
 			path.append( n_index )
 		print("Ant # "+str(j)+": ", end='')
 		for i in range( n_cities ):
@@ -138,6 +141,12 @@ def send_ants():
 
 		path_list.append( path )
 	return path_list
+
+# def update_pheromone_matrix():
+# 	for i in range( n_cities ):
+# 		for j in range( n_cities ):
+# 			if( j > i):
+# 				pheromone_matrix[i][j] *= p + 
 
 def as_algorithm():
 	initialize_pheromone_matrix()
@@ -150,7 +159,7 @@ def as_algorithm():
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
-		print_ant_results( path_list )
+		cost_list = print_ant_results( path_list )
 
 
 
