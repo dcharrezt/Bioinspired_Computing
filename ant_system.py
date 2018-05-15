@@ -57,37 +57,87 @@ def initialize_visibility_matrix():
 def next_city( m_prob, random_number):
 	probabilty_sum = 0
 	for i in range( len(m_prob) ):
-		probabilty_sum += m_prob[i]
-		if( random_number <= probabilty_sum ):
-			return i
+		if( m_prob[i] != -1 ):
+			probabilty_sum += m_prob[i]
+			if( random_number <= probabilty_sum ):
+				return i
+
+def path_cost( path ):
+	m_sum = 0.
+	for i in range( len( path )-1 ):
+		m_sum += distance_matrix[path[i]][path[i+1]]
+	return m_sum
+
+def print_ant_results( path_list ):
+	print("\nResults")
+	costs_lists = []
+	for j in range( len( path_list ) ):
+		print("Ant # "+str(j)+": ", end='') 
+		for i in range( n_cities ):
+			if( i == n_cities-1 ):
+				print( cities[path_list[j][i]], end=' ')
+			else:
+				print( cities[ path_list[j][i]] + "-", end='')
+		costs_lists.append( path_cost(path_list[j]) ) 
+		print( "Cost: ", costs_lists[j])
+	index_ant = costs_lists.index( min(costs_lists) )
+	print("------------------------------------------------------")
+	print("Best Ant: ", end='')
+	for i in range( n_cities ):
+		if( i == n_cities-1 ):
+			print( cities[path_list[index_ant][i]], end=' ')
+		else:
+			print( cities[ path_list[index_ant][i]] + "-", end='')
+	print("Cost: ", costs_lists[index_ant])
+	print("------------------------------------------------------")
+	return costs_lists
 
 def send_ants():
+	path_list = []
 	for j in range( n_ants ):
 		print("Ant # ", j)
 		print("Initial city: A")
-		m_sum = 0
-		m_sums = []
-		for k in range( n_cities ):
-			if( first_city != k ):
-				t = pheromone_matrix[first_city][k]
-				n = visibility_matrix[first_city][k]
-				m_sums.append( t*n )
-				m_sum += t*n
-				print( cities[first_city] + "-" + cities[k], end=' ' )
-				print( "t = ", t, end=' ' )
-				print( "n = ", n, end=' ' )
-				print( "t*n = ", t*n )
-		m_prob = []
-		print()
-		for k in range( n_cities ):
-			if( first_city != k ):
-				m_prob.append( m_sums[k-1] / m_sum )
-				print( cities[first_city] + "-" + cities[k], end=' ' )
-				print( "Probabilty = ", m_sums[k-1] / m_sum)
-		random_number = random.random()
-		print( "Random number: ", random_number )
-		n_index = next_city( m_prob, random_number )
-		print("Next city: ", cities[n_index+1] )
+
+		path = []
+		path.append( first_city )
+		while( len(path) < n_cities ):
+			m_sum = 0
+			sums_list = []
+			for k in range( n_cities ):
+				if( k not in path ):
+					t = pheromone_matrix[first_city][k]
+					n = visibility_matrix[first_city][k]
+					tn = t*n
+					sums_list.append( tn )
+					m_sum += tn
+					print( cities[first_city] + "-" + cities[k], end=' ' )
+					print( "t = ", t, end=' ' )
+					print( "n = ", n, end=' ' )
+					print( "t*n = ", tn )
+				else:
+					sums_list.append(-1)
+			m_prob = []
+			for k in range( n_cities ):
+				if( k not in path ):
+					m_prob.append( sums_list[k] / m_sum )
+					print( cities[first_city] + "-" + cities[k], end=' ' )
+					print( "Probabilty = ", sums_list[k] / m_sum)
+				else:
+					m_prob.append(-1)
+			random_number = random.random()
+			print( "Random number: ", random_number )
+			n_index = next_city( m_prob, random_number )
+			print("Next city: ", cities[n_index] )
+			path.append( n_index )
+		print("Ant # "+str(j)+": ", end='')
+		for i in range( n_cities ):
+			if( i == n_cities-1 ):
+				print( cities[path[i]])
+			else:	
+				print( cities[path[i]] + "-", end='')
+
+		path_list.append( path )
+	return path_list
 
 def as_algorithm():
 	initialize_pheromone_matrix()
@@ -99,8 +149,8 @@ def as_algorithm():
 			print_matrix( distance_matrix, " Distance Matrix " )
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
-		send_ants()
-
+		path_list = send_ants()
+		print_ant_results( path_list )
 
 
 
