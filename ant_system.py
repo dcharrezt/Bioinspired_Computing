@@ -21,8 +21,8 @@ beta = 1
 Q = 1
 initial_pheromones = .1
 
-n_ants = 3
-n_iterations = 100
+n_ants = 20
+n_iterations = 150
 n_cities = 10
 
 pheromone_matrix = np.zeros(( n_cities, n_cities ))
@@ -142,11 +142,25 @@ def send_ants():
 		path_list.append( path )
 	return path_list
 
-# def update_pheromone_matrix():
-# 	for i in range( n_cities ):
-# 		for j in range( n_cities ):
-# 			if( j > i):
-# 				pheromone_matrix[i][j] *= p + 
+def get_delta(path_list, costs_lists, i , j):
+	# print( i, "\t", j )
+	s = 0
+	for k in range( len( path_list )):
+		for l in range( n_cities -1 ):
+			if( path_list[k][l] == i and path_list[k][l+1] == j):
+				# print( "ms ",  Q / costs_lists[k])
+				s += Q / costs_lists[k]
+	# print("s ", s)
+	return s
+
+
+def update_pheromone_matrix(path_list, costs_lists):
+	global p
+	for r_0 in range( n_cities ):
+		for r_1 in range( n_cities ):
+			if( r_0 != r_1):
+				tmp = get_delta(path_list, costs_lists, r_0, r_1)
+				pheromone_matrix[r_0][r_1] *= p + tmp
 
 def as_algorithm():
 	initialize_pheromone_matrix()
@@ -160,10 +174,9 @@ def as_algorithm():
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
 		cost_list = print_ant_results( path_list )
+		update_pheromone_matrix( path_list, cost_list )
 
-
-
-
+		print_matrix( pheromone_matrix, " asdas ")
 
 
 if __name__ == "__main__":
