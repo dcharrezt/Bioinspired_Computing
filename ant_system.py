@@ -19,18 +19,32 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 # 				   [23, 18, 89, 0, 87],
 # 				   [1, 3, 56, 87, 0] ]
 
+# ##### ACO
+# first_city = 3
+# p = 0.99
+# alpha = 1
+# beta = 1
+# Q = 1
+# initial_pheromones = .1
+
+# n_ants = 3
+# n_iterations = 100
+# n_cities = 5
+
+###### Elitist
 first_city = 3
 p = 0.99
 alpha = 1
 beta = 1
 Q = 1
-initial_pheromones = .1
+initial_pheromones = 10
 
 n_ants = 3
-n_iterations = 100
+n_iterations = 2
 n_cities = 5
-
 e = 5
+
+
 w = 6
 
 pheromone_matrix = np.zeros(( n_cities, n_cities ))
@@ -179,23 +193,25 @@ def send_ants():
 	return path_list
 
 def get_delta(path_list, costs_lists, i , j):
-	# print( i, "\t", j )
 	s = 0
+	sum_log = []
 	for k in range( len( path_list )):
 		for l in range( n_cities -1 ):
 			if( (path_list[k][l] == i and path_list[k][l+1] == j) or \
 				(path_list[k][l] == j and path_list[k][l+1] == i) ):
-				# print( "ms ",  Q / costs_lists[k])
-				s += Q / costs_lists[k]
-	# print("s ", s)
-	return s
+				dd = Q / costs_lists[k]
+				sum_log.append( dd )
+				s += dd
+			# else:
+			# 	sum_log.append( 0 )
+	return s, sum_log
 
 def update_pheromone_matrix(path_list, costs_lists):
 	global p
 	for r_0 in range( n_cities ):
 		for r_1 in range( n_cities ):
 			if( r_0 != r_1):
-				tmp = get_delta(path_list, costs_lists, r_0, r_1)
+				tmp, dd = get_delta(path_list, costs_lists, r_0, r_1)
 				pheromone_matrix[r_0][r_1] *= p + tmp
 
 def check_best_rank( path, cost, i, j):
@@ -244,12 +260,19 @@ def update_pheromone_elitist( path_list, costs_lists ):
 	for r_0 in range( n_cities ):
 		for r_1 in range( n_cities ):
 			if( r_0 != r_1):
-				tmp = get_delta(path_list, costs_lists, r_0, r_1)
+				tmp, dd = get_delta(path_list, costs_lists, r_0, r_1)
 				best = check_best_rank( path_list[index_ant], \
 											costs_lists[index_ant], r_0, r_1 )
-
+				print(cities[r_0] + "-" + cities[r_1] + ": Pheromone = ", end='')
+				print(pheromone_matrix[r_0][r_1] * p, end='+')
+				for i in range( len(dd) ):
+					if i == len(dd) - 1:
+						print(str(dd[i]), end='')
+					else:
+						print(str(dd[i])+"+", end='')
+				print("+",best, end='')
 				pheromone_matrix[r_0][r_1] *= p + tmp + best
-				# print(r_0 + " " r_1 " = " )
+				print("=",pheromone_matrix[r_0][r_1])
 
 def update_pheromone_rankings( ranking ):
 	global p
@@ -275,8 +298,8 @@ def as_algorithm():
 		# ranking = print_ant_results_rank( path_list )
 		# print(ranking)
 
-		update_pheromone_matrix( path_list, cost_list )
-		# update_pheromone_elitist( path_list, cost_list)
+		# update_pheromone_matrix( path_list, cost_list )
+		update_pheromone_elitist( path_list, cost_list)
 		# update_pheromone_rankings( ranking )
 
 	print_matrix( pheromone_matrix, " Updated Pheromone Matrix ")
