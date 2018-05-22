@@ -17,12 +17,12 @@ initial_pheromones = 1.
 
 alpha = 1
 beta = 1
-p = 0.07
+p = 0.05
 
 min_pheromone = 0.1
 max_pheromone = 1.
 
-n_iterations = 2
+n_iterations = 30
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -142,11 +142,34 @@ def print_ant_results( path_list ):
 
 	return costs_lists, index_ant
 
-# def update_pheromone_matrix( path_list, cost_list ):
+def get_delta( i, j, best_path, cost ):
+	for k in range( len(best_path) -1 ):
+		if ( best_path[k] == i and best_path[k+1] == j) or \
+			( best_path[k+1] == i and best_path[k] == j):
+			return 1 / cost
+	return 0
 
-# 	for i in range( n_units ):
-# 		for j in range( n_units ):
 
+def update_pheromone_matrix( path_list, costs_lists, best_index ):
+
+	for i in range( n_units ):
+		for j in range( n_units ):
+			tmp = 0
+			if i != j :
+				print(units[i]+" "+units[j]+": Pheromone = ", end='')
+				delta = get_delta(i, j, path_list[best_index], \
+										costs_lists[best_index])
+				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
+									"+"+str(delta)+" = ", end='')
+				tmp = (1-p)*pheromone_matrix[i][j] + delta
+
+				if tmp < min_pheromone :
+					pheromone_matrix[i][j] = min_pheromone
+				elif tmp > max_pheromone :
+					pheromone_matrix[i][j] = max_pheromone
+				else:
+					pheromone_matrix[i][j] = tmp
+				print( pheromone_matrix[i][j] )
 
 
 def min_max_algorithm():
