@@ -17,11 +17,12 @@ initial_pheromones = 1.
 
 alpha = 1
 beta = 1
+p = 0.07
 
 min_pheromone = 0.1
 max_pheromone = 1.
 
-n_iterations = 10
+n_iterations = 2
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -108,15 +109,61 @@ def send_ants():
 		path_list.append( path )
 	return path_list
 
+def path_cost( path ):
+	cost = 0.
+	for i in range( n_units ):
+		for j in range( n_units ):
+			if i != j :
+				cost += flow_matrix[i][j]*distance_matrix[path[i]][path[j]]
+	return cost
+
+def print_ant_results( path_list ):
+	print("\nResults")
+	costs_lists = []
+	for j in range( len( path_list ) ):
+		print("Ant # "+str(j)+": ", end='') 
+		for i in range( n_units ):
+			if( i == n_units-1 ):
+				print( units[path_list[j][i]], end=' ')
+			else:
+				print( units[ path_list[j][i]] + "-", end='')
+		costs_lists.append( path_cost(path_list[j]) ) 
+		print( "Cost: ", costs_lists[j])
+	index_ant = costs_lists.index( min(costs_lists) )
+	print("------------------------------------------------------")
+	print("Best Ant: ", end='')
+	for i in range( n_units ):
+		if( i == n_units-1 ):
+			print( units[path_list[index_ant][i]], end=' ')
+		else:
+			print( units[path_list[index_ant][i]] + "-", end='')
+	print("Cost: ", costs_lists[index_ant])
+	print("------------------------------------------------------")
+
+	return costs_lists, index_ant
+
+# def update_pheromone_matrix( path_list, cost_list ):
+
+# 	for i in range( n_units ):
+# 		for j in range( n_units ):
+
+
+
 def min_max_algorithm():
-
-	initialize_visibility_matrix()
 	initialize_pheromone_matrix()
+	initialize_visibility_matrix()
 
-	path_list = send_ants()
+	for i in range( n_iterations ):
+		print("Iteration # ", i)
+		if(i == 0):
+			print_matrix( distance_matrix, " Distance Matrix " )
+			print_matrix( pheromone_matrix, " Pheromone Matrix" )
+			print_matrix( visibility_matrix, "Visibility Matrix" )
+		path_list = send_ants()
+		cost_list, best_index = print_ant_results( path_list )
+		update_pheromone_matrix( path_list, cost_list, best_index )
 
-	# for i in range( n_iterations ):
-	# 	print
+	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 if __name__ == "__main__":
 
