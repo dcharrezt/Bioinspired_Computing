@@ -32,7 +32,7 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 # n_cities = 5
 
 ###### Elitist
-# first_city = 3
+# first_city = 0
 # p = 0.99
 # alpha = 1
 # beta = 1
@@ -44,7 +44,9 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 # n_cities = 5
 # e = 5
 
-##### ACO ranking
+# global_index = 0
+
+#### ACO ranking
 first_city = 3
 p = 0.99
 alpha = 1
@@ -261,7 +263,10 @@ def get_delta_rank( ranking, i , j):
 		for k in range( n_cities - 1 ):
 			if( (ms[2][k] == i and ms[2][k+1] == j)  or \
 					ms[2][k] == j and ms[2][k+1] == i ):
-				dd = ( w-ms[0] ) * Q / ms[1]
+				if(w < k):
+					dd = ( w-ms[0] ) * Q / ms[1]
+				else:
+					dd = Q / ms[1]
 				sum_log.append( dd )
 				s += dd
 		if ms[0] == 0:
@@ -271,14 +276,17 @@ def get_delta_rank( ranking, i , j):
 	return s, sum_log
 
 def update_pheromone_elitist( path_list, costs_lists ):
+	global global_index
 	index_ant = costs_lists.index( min(costs_lists) )
+	if( costs_lists[index_ant] < costs_lists[global_index] ):
+		global_index = int(index_ant)
 	global p
 	for r_0 in range( n_cities ):
 		for r_1 in range( n_cities ):
 			if( r_0 != r_1):
 				tmp, dd = get_delta(path_list, costs_lists, r_0, r_1)
-				best = check_best_rank( path_list[index_ant], \
-											costs_lists[index_ant], r_0, r_1 )
+				best = check_best_rank( path_list[global_index], \
+											costs_lists[global_index], r_0, r_1 )
 				print(cities[r_0] + "-" + cities[r_1] + ": Pheromone = ", end='')
 				print(pheromone_matrix[r_0][r_1] * p, end='+')
 				for i in range( len(dd) ):
