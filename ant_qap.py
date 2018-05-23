@@ -11,18 +11,18 @@ flow_matrix = [ [0, 3, 8, 3],
 				[8, 2, 0, 5],
 				[3, 4, 5, 0] ]
 
-n_ants = 4
+n_ants = 10
 n_units = 4
 initial_pheromones = 1.
 
-alpha = 1
+alpha = 2
 beta = 1
-p = 0.05
+p = 0.03
 
 min_pheromone = 0.1
 max_pheromone = 1.
 
-n_iterations = 30
+n_iterations = 1
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
