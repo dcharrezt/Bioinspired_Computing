@@ -16,6 +16,16 @@ flow_matrix = [ [0, 0, 2, 0, 3],
 n_ants = 4
 n_iterations = 0.
 
+def print_matrix( matrix, text ):
+	print( text )
+	for i in range( n_units ):
+		if(i==0):
+			print("\tA\tB\tC\tD" )
+		for j in range( n_units ):
+			if(j==0):
+				print(units[i], end='\t')
+			print( "{:.3f}".format(matrix[i][j]), end='\t')
+		print()
 
 
 def ACS_algorithm():
