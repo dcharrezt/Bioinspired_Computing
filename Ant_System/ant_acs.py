@@ -1,6 +1,5 @@
 
 
-n_ants = 4
 
 distance_matrix = [ [0, 50, 50, 94, 50],
 					[50, 0, 22, 50, 36],
@@ -14,4 +13,18 @@ flow_matrix = [ [0, 0, 2, 0, 3],
 			    [0, 3, 0, 0, 1],
 			    [3, 0, 0, 1, 0] ]
 
- 
+n_ants = 4
+n_iterations = 0.
+
+
+
+def ACS_algorithm():
+	iteration = 0
+	for i in range( n_iterations ):
+		print("Iteration #", i)
+
+
+
+if __name__ == "__main__":
+
+	print("Hi") 
