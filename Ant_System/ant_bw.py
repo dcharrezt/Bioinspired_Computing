@@ -27,8 +27,8 @@ beta = 1
 p = 0.99
 mp =0.2
 
-n_iterations = 10
-n_stagnant_iter = 100
+n_iterations = 100
+n_stagnant_iter = 20
 initial_unit = random.randint( 0, n_units-1 )
 
 best_global = {'path': [], 'cost': np.inf}
@@ -207,7 +207,6 @@ def second_evaporation( path, cost):
 
 
 def update_pheromone_matrix( path_list, costs_lists, worst_local ):
-
 	for i in range( n_units ):
 		for j in range( n_units ):
 			tmp = 0
@@ -243,6 +242,7 @@ def ACS_algorithm():
 def BWAS_algorithm():
 	initialize_pheromone_matrix()
 	initialize_visibility_matrix()
+	global_counter = 0
 
 	for i in range( n_iterations ):
 		print("Iteration # ", i)
@@ -251,7 +251,17 @@ def BWAS_algorithm():
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
+		tmp = best_global['cost']
 		cost_list, worst_local = print_ant_results( path_list )
+
+		if( best_global['cost'] == tmp ):
+			global_counter += 1
+		else:
+			global_counter = 0
+
+		if n_stagnant_iter <= global_counter :
+			initialize_pheromone_matrix()
+
 		update_pheromone_matrix( path_list, cost_list ,worst_local )
 
 	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
