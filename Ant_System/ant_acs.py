@@ -24,10 +24,10 @@ Q = 1
 q_0 = 0.7
 phi = 0.5
 
-n_iterations = 2
+n_iterations = 100
 initial_unit = random.randint( 0, n_units-1 )
 
-best_global = {'path':[], 'cost':-1}
+best_global = {'path':[], 'cost': np.inf}
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -60,7 +60,7 @@ def initialize_visibility_matrix():
 									( distance_matrix[i][j] * flow_matrix[i][j] )
 				else:
 					visibility_matrix[i][j] = 1.0 / \
-									( distance_matrix[i][j] * 1e-5 )
+									( distance_matrix[i][j])
 
 
 
@@ -186,17 +186,17 @@ def print_ant_results( path_list ):
 	print("------------------------------------------------------")
 
 	if best_global['cost'] > costs_lists[index_ant] :
-		best_global['path'] = path_list[index_ant]
+		best_global['path'] = list(path_list[index_ant])
 		best_global['cost'] = costs_lists[index_ant]
 
 	print("------------------------------------------------------")
 	print("Best Global Ant: ", end='')
 	for i in range( n_units ):
 		if( i == n_units-1 ):
-			print( units[path_list[index_ant][i]], end=' ')
+			print( units[best_global['path'][i]], end=' ')
 		else:
-			print( units[path_list[index_ant][i]] + "-", end='')
-	print("Cost: ", costs_lists[index_ant])
+			print( units[best_global['path'][i]] + "-", end='')
+	print("Cost: ", best_global['cost'])
 	print("------------------------------------------------------")
 
 	return costs_lists, index_ant
@@ -234,7 +234,7 @@ def ACS_algorithm():
 		cost_list = print_ant_results( path_list )
 		update_pheromone_matrix( path_list, cost_list )
 
-	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
+	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 
 if __name__ == "__main__":
