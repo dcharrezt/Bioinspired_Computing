@@ -27,6 +27,7 @@ phi = 0.5
 n_iterations = 2
 initial_unit = random.randint( 0, n_units-1 )
 
+best_global = {'path':[], 'cost':-1}
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -71,7 +72,7 @@ def next_city( m_prob, random_number):
 			if( random_number <= probabilty_sum ):
 				return i
 
-def update_pheromone_trace( i, j, delta_bs):
+def update_pheromone_trace( i, j):
 	print("(1-"+str(phi)+")*"+str(pheromone_matrix[i][j])+"+"+str(phi)+"*"\
 				+str(initial_pheromones)+"=",end='')
 	pheromone_matrix[i][j] *=(1-phi) + phi*initial_pheromones
@@ -175,7 +176,21 @@ def print_ant_results( path_list ):
 		print( "Cost: ", costs_lists[j])
 	index_ant = costs_lists.index( min(costs_lists) )
 	print("------------------------------------------------------")
-	print("Best Ant: ", end='')
+	print("Best Local Ant: ", end='')
+	for i in range( n_units ):
+		if( i == n_units-1 ):
+			print( units[path_list[index_ant][i]], end=' ')
+		else:
+			print( units[path_list[index_ant][i]] + "-", end='')
+	print("Cost: ", costs_lists[index_ant])
+	print("------------------------------------------------------")
+
+	if best_global['cost'] > costs_lists[index_ant] :
+		best_global['path'] = path_list[index_ant]
+		best_global['cost'] = costs_lists[index_ant]
+
+	print("------------------------------------------------------")
+	print("Best Global Ant: ", end='')
 	for i in range( n_units ):
 		if( i == n_units-1 ):
 			print( units[path_list[index_ant][i]], end=' ')
@@ -186,33 +201,23 @@ def print_ant_results( path_list ):
 
 	return costs_lists, index_ant
 
-def get_delta( i, j, best_path, cost ):
-	for k in range( len(best_path) -1 ):
-		if ( best_path[k] == i and best_path[k+1] == j) or \
-			( best_path[k+1] == i and best_path[k] == j):
-			return 1 / cost
+def get_delta( i, j):
+	for k in range( len(best_global['path']) -1 ):
+		if ( best_global['path'][k] == i and best_global['path'][k+1] == j) or \
+			( best_global['path'][k+1] == i and best_global['path'][k] == j):
+			return 1 / best_global['cost']
 	return 0
 
-
-def update_pheromone_matrix( path_list, costs_lists, best_index ):
-
+def update_pheromone_matrix( path_list, costs_lists ):
 	for i in range( n_units ):
 		for j in range( n_units ):
 			tmp = 0
 			if i != j :
 				print(units[i]+" "+units[j]+": Pheromone = ", end='')
-				delta = get_delta(i, j, path_list[best_index], \
-										costs_lists[best_index])
+				delta = get_delta(i, j)
 				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
 									"+"+str(delta)+" = ", end='')
-				tmp = (1-p)*pheromone_matrix[i][j] + delta
-
-				if tmp < min_pheromone :
-					pheromone_matrix[i][j] = min_pheromone
-				elif tmp > max_pheromone :
-					pheromone_matrix[i][j] = max_pheromone
-				else:
-					pheromone_matrix[i][j] = tmp
+				pheromone_matrix[i][j] *= p+(1-p)*delta
 				print( pheromone_matrix[i][j] )
 
 def ACS_algorithm():
@@ -226,8 +231,8 @@ def ACS_algorithm():
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
-import numpy as np	# 	cost_list, best_index = print_ant_results( path_list )
-	# 	update_pheromone_matrix( path_list, cost_list, best_index )
+		cost_list = print_ant_results( path_list )
+		update_pheromone_matrix( path_list, cost_list )
 
 	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
