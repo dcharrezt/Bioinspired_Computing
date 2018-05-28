@@ -27,11 +27,12 @@ beta = 1
 p = 0.99
 mp =0.2
 
-n_iterations = 100
-n_stagnant_iter = 20
+n_iterations = 10
+n_stagnant_iter = 100
 initial_unit = random.randint( 0, n_units-1 )
 
-best_global = {'path':[], 'cost': np.inf}
+best_global = {'path': [], 'cost': np.inf}
+# worst_local = {'path': [], 'cost': -1 }
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -155,6 +156,7 @@ def print_ant_results( path_list ):
 		costs_lists.append( path_cost(path_list[j]) ) 
 		print( "Cost: ", costs_lists[j])
 	index_ant = costs_lists.index( min(costs_lists) )
+	worst_local = costs_lists.index( max(costs_lists) )
 	print("------------------------------------------------------")
 	print("Best Local Ant: ", end='')
 	for i in range( n_units ):
@@ -179,7 +181,7 @@ def print_ant_results( path_list ):
 	print("Cost: ", best_global['cost'])
 	print("------------------------------------------------------")
 
-	return costs_lists, index_ant
+	return costs_lists, worst_local
 
 def get_delta( i, j):
 	for k in range( len(best_global['path']) -1 ):
@@ -188,7 +190,24 @@ def get_delta( i, j):
 			return 1 / best_global['cost']
 	return 0
 
-def update_pheromone_matrix( path_list, costs_lists ):
+def arc_in_global( i, j):
+	for k in range( len(best_global['path']) -1 ):
+		if (i == best_global['path'][k] and j == best_global['path'][k+1]) or \
+			( i == best_global['path'][k+1] and j == best_global['path'][k] ):
+			return True
+	return False
+
+def second_evaporation( path, cost):
+	print("Second evaporation:")
+	for i in range( len(path) -1 ):
+		if not arc_in_global( path[i], path[i+1] ) :
+			print(units[path[i]]+" "+units[path[i+1]]+": Pheromone = ", end='')
+			pheromone_matrix[path[i]][path[i+1]] *=(1-p)
+			print(pheromone_matrix[path[i]][path[i+1]])
+
+
+def update_pheromone_matrix( path_list, costs_lists, worst_local ):
+
 	for i in range( n_units ):
 		for j in range( n_units ):
 			tmp = 0
@@ -197,8 +216,13 @@ def update_pheromone_matrix( path_list, costs_lists ):
 				delta = get_delta(i, j)
 				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
 									"+"+str(delta)+" = ", end='')
-				pheromone_matrix[i][j] *= p+(1-p)*delta
+				pheromone_matrix[i][j] *= (1-p)+delta
 				print( pheromone_matrix[i][j] )
+
+	print("GLOBAL ", best_global['path'], " Cost:", best_global['cost'])
+	print("LOCAL", path_list[worst_local], " Cost:", costs_lists[worst_local])
+	second_evaporation( path_list[worst_local], costs_lists[worst_local] )
+
 
 def ACS_algorithm():
 	initialize_pheromone_matrix()
@@ -227,8 +251,8 @@ def BWAS_algorithm():
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
-	# 	cost_list = print_ant_results( path_list )
-	# 	update_pheromone_matrix( path_list, cost_list )
+		cost_list, worst_local = print_ant_results( path_list )
+		update_pheromone_matrix( path_list, cost_list ,worst_local )
 
 	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
