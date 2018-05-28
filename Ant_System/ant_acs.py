@@ -72,7 +72,10 @@ def next_city( m_prob, random_number):
 				return i
 
 def update_pheromone_trace( i, j, delta_bs):
-	pheromone_matrix[i][j] *= p + (1-p)*pheromone_matrix[i][j]
+	print("(1-"+str(phi)+")*"+str(pheromone_matrix[i][j])+"+"+str(phi)+"*"\
+				+str(initial_pheromones)+"=",end='')
+	pheromone_matrix[i][j] *=(1-phi) + phi*initial_pheromones
+	print(pheromone_matrix[i][j])
 
 def send_ants():
 	path_list = []
@@ -117,7 +120,7 @@ def send_ants():
 				print( "Random number: ", random_number )
 				n_index = next_city( m_prob, random_number )
 				print("Next city: ", units[n_index] )
-				print("Updating arc "+str(path[-1])+"-"+str(n_index)+": ")
+
 
 			else:
 				print("Travel by Intensification")
@@ -137,6 +140,8 @@ def send_ants():
 							n_index = j
 				print("Next city: ", units[n_index] )
 
+			print("Updating arc "+str(path[-1])+"-"+str(n_index)+": ",end='')
+			update_pheromone_trace(path[-1], n_index)
 			current_unit = n_index
 			path.append( n_index )
 		print("Ant # "+str(i)+": ", end='')
