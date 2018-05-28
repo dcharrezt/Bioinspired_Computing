@@ -19,7 +19,7 @@ initial_pheromones = .1
 
 alpha = 1
 beta = 1
-p = 0.99
+p = 0.01
 Q = 1
 q_0 = 0.7
 phi = 0.5
@@ -52,17 +52,16 @@ def initialize_pheromone_matrix():
 				pheromone_matrix[i][j] = initial_pheromones
 
 def initialize_visibility_matrix():
-	for i in range( n_units ):
-		for j in range( n_units ):
-			if(i!=j):
-				if flow_matrix[i][j] != 0 :
-					visibility_matrix[i][j] = 1.0 / \
-									( distance_matrix[i][j] * flow_matrix[i][j] )
-				else:
-					visibility_matrix[i][j] = 1.0 / \
-									( distance_matrix[i][j])
-
-
+	tmp = np.matmul( flow_matrix, distance_matrix )
+	for i in range( len(tmp) ):
+		for j in range( len(tmp) ):
+			if i != j :
+				if tmp[i][j] == 0 :
+					visibility_matrix[i][j] = 10e-10
+				else :
+					visibility_matrix[i][j] = 1 / tmp[i][j]
+			else :
+				visibility_matrix[i][j]
 
 def next_city( m_prob, random_number):
 	probabilty_sum = 0
@@ -234,7 +233,7 @@ def ACS_algorithm():
 		cost_list = print_ant_results( path_list )
 		update_pheromone_matrix( path_list, cost_list )
 
-	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
+	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import random
+import math
 import numpy as np
-
+import copy
 
 distance_matrix = [ [0, 35, 71, 99, 71, 75, 41],
 					[35, 0, 42, 80, 65, 82, 47],
@@ -18,21 +19,25 @@ flow_matrix = [ [0, 2, 0, 0, 0, 0, 2],
 				[0, 1, 1, 0, 0, 0, 0],
 				[2, 0, 0, 1, 0, 0, 0] ]
 
-n_ants = 4
+n_ants = 8
 n_units = 7
-initial_pheromones = .1
+initial_pheromones = 10
 
 alpha = 1
 beta = 1
-p = 0.99
+p = 0.01
 mp =0.2
 
-n_iterations = 100
+n_iterations = 200
 n_stagnant_iter = 20
 initial_unit = random.randint( 0, n_units-1 )
 
+
 best_global = {'path': [], 'cost': np.inf}
-# worst_local = {'path': [], 'cost': -1 }
+
+infinite = -1
+dev = 0.1
+delta = 0.1
 
 pheromone_matrix = np.zeros(( n_units, n_units ))
 visibility_matrix = np.zeros(( n_units, n_units ))
@@ -47,7 +52,7 @@ def print_matrix( matrix, text ):
 		for j in range( n_units ):
 			if(j==0):
 				print(units[i], end='\t')
-			print( "{:.3f}".format(matrix[i][j]), end='\t')
+			print( "{:.4f}".format(matrix[i][j]), end='\t')
 		print()
 
 def initialize_pheromone_matrix():
@@ -57,17 +62,25 @@ def initialize_pheromone_matrix():
 				pheromone_matrix[i][j] = initial_pheromones
 
 def initialize_visibility_matrix():
-	for i in range( n_units ):
-		for j in range( n_units ):
-			if(i!=j):
-				if flow_matrix[i][j] != 0 :
-					visibility_matrix[i][j] = 1.0 / \
-									( distance_matrix[i][j] * flow_matrix[i][j] )
-				else:
-					visibility_matrix[i][j] = 1.0 / \
-									( distance_matrix[i][j] )
+	tmp = np.matmul( flow_matrix, distance_matrix )
+	for i in range( len(tmp) ):
+		for j in range( len(tmp) ):
+			if i != j :
+				if tmp[i][j] == 0 :
+					visibility_matrix[i][j] = 10e-10
+				else :
+					visibility_matrix[i][j] = 1 / tmp[i][j]
+			else :
+				visibility_matrix[i][j]
 
-
+	# for i in range( n_units ):
+	# 	for j in range( n_units ):
+	# 		if(i!=j):
+	# 			d_i = [ distance_matrix[i] for k in range(n_units)]
+	# 			f_j = [ flow_matrix[j] for k in range(n_units)]
+	# 			print("D ",d_i)
+	# 			print("F ",f_j)
+	# 			visibility_matrix[i][j] = 1.0 / ( np.dot( d_i, f_j ) )
 
 def next_city( m_prob, random_number):
 	probabilty_sum = 0
@@ -77,11 +90,24 @@ def next_city( m_prob, random_number):
 			if( random_number <= probabilty_sum ):
 				return i
 
-# def update_pheromone_trace( i, j):
-# 	print("(1-"+str(phi)+")*"+str(pheromone_matrix[i][j])+"+"+str(phi)+"*"\
-# 				+str(initial_pheromones)+"=",end='')
-# 	pheromone_matrix[i][j] *=(1-phi) + phi*initial_pheromones
-# 	print(pheromone_matrix[i][j])
+def std_deviation(x, dev):
+	return (math.exp(-0.5 * (x / dev) ** 2)) / \
+		   (dev * math.sqrt(2 * math.pi))
+
+
+def integral(lim_inf, lim_sup, dev, delta, rnd):
+	area = 0.
+	aux_sum = std_deviation(lim_inf, dev)
+	aux = std_deviation(lim_inf, dev)
+
+	lin_space = np.arange(lim_inf + delta, lim_sup, delta)
+	for i in lin_space:
+		aux_sum = std_deviation(i, dev)
+		area += (aux + aux_sum)
+		if (area * (delta / 2.) ) > rnd:
+			return i
+		aux = aux_sum
+	return -1 * infinite
 
 def send_ants():
 	path_list = []
@@ -211,7 +237,7 @@ def update_pheromone_matrix( path_list, costs_lists, worst_local ):
 		for j in range( n_units ):
 			tmp = 0
 			if i != j :
-				print(units[i]+" "+units[j]+": Pheromone = ", end='')
+				print(units[i]+"-"+units[j]+": Pheromone = ", end='')
 				delta = get_delta(i, j)
 				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
 									"+"+str(delta)+" = ", end='')
@@ -221,6 +247,21 @@ def update_pheromone_matrix( path_list, costs_lists, worst_local ):
 	print("GLOBAL ", best_global['path'], " Cost:", best_global['cost'])
 	print("LOCAL", path_list[worst_local], " Cost:", costs_lists[worst_local])
 	second_evaporation( path_list[worst_local], costs_lists[worst_local] )
+
+	mean_threshold = 0
+	for i in range( len( best_global['path'] ) -1 ):
+		mean_threshold += pheromone_matrix[best_global['path'][i]]\
+										  [best_global['path'][i+1]]
+	mean_threshold /= n_units
+	print("THRESHOLD ", mean_threshold)
+	for i in range( n_units ):
+		for j in range( n_units ):
+			mut_random = random.random()
+			if mp > mut_random :
+				tmp = integral(-mean_threshold, mean_threshold, 0.3, 0.01, \
+								random.random() )
+				print("Mutation ", tmp)
+				pheromone_matrix[i][j] += tmp 
 
 
 def ACS_algorithm():
@@ -264,7 +305,7 @@ def BWAS_algorithm():
 
 		update_pheromone_matrix( path_list, cost_list ,worst_local )
 
-	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
+	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 
 if __name__ == "__main__":
