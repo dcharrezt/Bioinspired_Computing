@@ -71,6 +71,9 @@ def next_city( m_prob, random_number):
 			if( random_number <= probabilty_sum ):
 				return i
 
+def update_pheromone_trace( i, j, delta_bs):
+	pheromone_matrix[i][j] *= p + (1-p)*pheromone_matrix[i][j]
+
 def send_ants():
 	path_list = []
 	for i in range( n_ants ):
