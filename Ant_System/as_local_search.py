@@ -69,7 +69,7 @@ def next_city( m_prob, random_number):
 				return i
 
 def send_ants():
-	first_city = random.randint(0, n_cities-1)
+	global first_city
 	path_list = []
 
 	for j in range( n_ants ):
