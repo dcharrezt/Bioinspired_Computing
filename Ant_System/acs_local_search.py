@@ -18,17 +18,16 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11, 89, 97, 52],
 
 # Parameters
 
-p = 0.03
+p = 0.1
 alpha = 1
-beta = 1
-Q = 1
-q_0 = 0.7
-phi = 0.5
+beta = 2
+q_0 = 0.9
+phi = 0.1
 
-initial_pheromones = .1
+initial_pheromones = 1.
 
-n_ants = 4
-n_iterations = 20
+n_ants = 10
+n_iterations = 150
 n_cities = 13
 
 n_mutation = 10
@@ -76,7 +75,7 @@ def next_city( m_prob, random_number):
 def update_pheromone_trace( i, j):
 	print("(1-"+str(phi)+")*"+str(pheromone_matrix[i][j])+"+"+str(phi)+"*"\
 				+str(initial_pheromones)+"=",end='')
-	pheromone_matrix[i][j] *=(1-phi) + phi*initial_pheromones
+	pheromone_matrix[i][j] *= (1-phi) + phi*initial_pheromones
 	print(pheromone_matrix[i][j])
 
 def send_ants():
@@ -153,6 +152,100 @@ def send_ants():
 			else:	
 				print( cities[path[i]] + "-", end='')
 		path_list.append( path )
+	return path_list
+
+def path_cost( path ):
+	m_sum = 0.
+	for i in range( len( path )-1 ):
+		m_sum += distance_matrix[path[i]][path[i+1]]
+	return m_sum
+
+def print_ant_results( path_list ):
+	print("\nResults")
+	costs_lists = []
+	for j in range( len( path_list ) ):
+		print("Ant # "+str(j)+": ", end='') 
+		for i in range( n_cities ):
+			if( i == n_cities-1 ):
+				print( cities[path_list[j][i]], end=' ')
+			else:
+				print( cities[ path_list[j][i]] + "-", end='')
+		costs_lists.append( path_cost(path_list[j]) ) 
+		print( "Cost: ", costs_lists[j])
+	index_ant = costs_lists.index( min(costs_lists) )
+	print("------------------------------------------------------")
+	print("Best Local Ant: ", end='')
+	for i in range( n_cities ):
+		if( i == n_cities-1 ):
+			print( cities[path_list[index_ant][i]], end=' ')
+		else:
+			print( cities[path_list[index_ant][i]] + "-", end='')
+	print("Cost: ", costs_lists[index_ant])
+	print("------------------------------------------------------")
+
+	if best_global['cost'] > costs_lists[index_ant] :
+		best_global['path'] = list(path_list[index_ant])
+		best_global['cost'] = costs_lists[index_ant]
+
+	print("------------------------------------------------------")
+	print("Best Global Ant: ", end='')
+	for i in range( n_cities ):
+		if( i == n_cities-1 ):
+			print( cities[best_global['path'][i]], end=' ' )
+		else:
+			print( cities[best_global['path'][i]] + "-", end='' )
+	print("Cost: ", best_global['cost'])
+	print("------------------------------------------------------")
+
+	return costs_lists
+
+def get_delta( i, j):
+	for k in range( len(best_global['path']) -1 ):
+		if ( best_global['path'][k] == i and best_global['path'][k+1] == j) or \
+			( best_global['path'][k+1] == i and best_global['path'][k] == j):
+			return 1 / best_global['cost']
+	return 0
+
+def update_pheromone_matrix( path_list, costs_lists ):
+	for i in range( n_cities ):
+		for j in range( n_cities ):
+			tmp = 0
+			if i != j :
+				print(cities[i]+" "+cities[j]+": Pheromone = ", end='')
+				delta = get_delta(i, j)
+				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
+									"+"+str(delta)+" = ", end='')
+				pheromone_matrix[i][j] *= (1-p)+p*delta
+				print( pheromone_matrix[i][j] )
+
+def first_option_mutation( path ):
+	tmp_path = path[:]
+	best_path = path[:]
+	while(True):
+		best_cost = path_cost(best_path)
+		better_than_best = False
+		for i in range( n_mutation ):
+			rand_1 = random.randint(0, n_cities-1)
+			rand_2 = random.randint(0, n_cities-1)
+			tmp_path[rand_1], tmp_path[rand_2] = tmp_path[rand_2], tmp_path[rand_1]
+			tmp_cost = path_cost( tmp_path )
+			if tmp_cost < best_cost :
+				best_path = tmp_path[:]
+				better_than_best = True
+				break
+		if not better_than_best :
+			return best_path, best_cost
+
+def local_search( path_list, costs_lists):
+	paths_mutated = []
+	costs_mutated = []
+	for i in range( len(path_list) ):
+		best_path, best_cost = first_option_mutation( path_list[i] )
+		if best_path != path_list[i] :
+			paths_mutated.append( best_path )
+			costs_mutated.append( best_cost )
+	path_list += paths_mutated
+	costs_lists += costs_mutated 
 
 def ACS_algorithm():
 	initialize_pheromone_matrix()
@@ -165,10 +258,11 @@ def ACS_algorithm():
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
 		path_list = send_ants()
-		# cost_list = print_ant_results( path_list )
-	# 	update_pheromone_matrix( path_list, cost_list )
+		cost_list = print_ant_results( path_list )
+		local_search( path_list, cost_list )
+		update_pheromone_matrix( path_list, cost_list )
 
-	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
+	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 
 if __name__ == "__main__":

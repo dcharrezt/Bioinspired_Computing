@@ -41,11 +41,11 @@ def print_matrix( matrix, text ):
 	print( text )
 	for i in range( n_cities ):
 		if(i==0):
-			print("\tA\tB\tC\tD\tE\tF\tG\tH\tI\tJ\tK\tL\tM" )
+			print("\tA\tB\tC\tD\tE\tF\tG\tH\tI\tJ\tK\tL\tM")
 		for j in range( n_cities ):
 			if(j==0):
 				print(cities[i], end='\t')
-			print( "{:.3f}".format(matrix[i][j]), end='\t' )
+			print( "{:.3f}".format(matrix[i][j]), end='\t')
 		print()
 
 def initialize_pheromone_matrix():
