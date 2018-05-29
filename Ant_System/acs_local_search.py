@@ -27,8 +27,8 @@ phi = 0.5
 
 initial_pheromones = .1
 
-n_ants = 10
-n_iterations = 100
+n_ants = 4
+n_iterations = 20
 n_cities = 13
 
 n_mutation = 10
@@ -65,6 +65,95 @@ def initialize_visibility_matrix():
 			if i != j :
 				visibility_matrix[i][j] = 1.0 / distance_matrix[i][j]
 
+def next_city( m_prob, random_number):
+	probabilty_sum = 0
+	for i in range( len(m_prob) ):
+		if( m_prob[i] != -1 ):
+			probabilty_sum += m_prob[i]
+			if( random_number <= probabilty_sum ):
+				return i
+
+def update_pheromone_trace( i, j):
+	print("(1-"+str(phi)+")*"+str(pheromone_matrix[i][j])+"+"+str(phi)+"*"\
+				+str(initial_pheromones)+"=",end='')
+	pheromone_matrix[i][j] *=(1-phi) + phi*initial_pheromones
+	print(pheromone_matrix[i][j])
+
+def send_ants():
+	path_list = []
+	for i in range( n_ants ):
+		path = []
+		current_unit = random.randint(0, n_cities-1)
+		path.append( current_unit )
+		print("Ant # ",i )
+		print("Starting at: ", current_unit)
+		while( len(path) < n_cities ):
+			m_sum = 0.
+			sums_list = []
+			n_index = -1
+			q = random.random()
+			print("Value of q: ", q)
+			if q <= q_0 :
+				print("Travel by diversification")
+
+				for j in range( n_cities ):
+					if j not in path :
+						t = (pheromone_matrix[current_unit][j]) ** alpha
+						n = (visibility_matrix[current_unit][j]) ** beta
+						tn = t*n
+						sums_list.append( tn )
+						m_sum += tn
+						print( cities[current_unit] + "-" + cities[j], end=' ' )
+						print( "t = ", t, end=' ' )
+						print( "n = ", n, end=' ' )
+						print( "t*n = ", tn )
+					else:
+						sums_list.append( -1 )
+				print( "Sum: ", m_sum )
+				m_prob = []
+				for k in range( n_cities ):
+					if k not in path :
+						m_prob.append( sums_list[k] / m_sum )
+						print( cities[current_unit] + "-" + cities[k], end=' ' )
+						print( "Probabilty = ", sums_list[k] / m_sum)
+					else:
+						m_prob.append(-1)
+				random_number = random.random()
+				print( "Random number: ", random_number )
+				n_index = next_city( m_prob, random_number )
+				print("Next city: ", cities[n_index] )
+
+			else:
+				print("Travel by Intensification")
+				prev_tn = -1
+				for j in range( n_cities ):
+					if j not in path :
+						t = (pheromone_matrix[current_unit][j]) ** alpha
+						n = (visibility_matrix[current_unit][j]) ** beta
+						tn = t*n
+						sums_list.append( tn )
+						m_sum += tn
+						print( cities[current_unit] + "-" + cities[j], end=' ' )
+						print( "t = ", t, end=' ' )
+						print( "n = ", n, end=' ' )
+						print( "t*n = ", tn )
+						if prev_tn < tn :
+							n_index = j
+				print("Next city: ", cities[n_index] )
+
+			print("Updating arc "+str(cities[path[-1]])+"-"+str(cities[n_index])\
+												+": ",end='')
+			update_pheromone_trace(path[-1], n_index)
+			current_unit = n_index
+			path.append( n_index )
+		print("Ant # "+str(i)+": ", end='')
+		for i in range( n_cities ):
+			if( i == n_cities-1 ):
+				print( cities[path[i]])
+			else:	
+				print( cities[path[i]] + "-", end='')
+		path_list.append( path )
+
 def ACS_algorithm():
 	initialize_pheromone_matrix()
 	initialize_visibility_matrix()
@@ -75,8 +164,8 @@ def ACS_algorithm():
 			print_matrix( distance_matrix, " Distance Matrix " )
 			print_matrix( pheromone_matrix, " Pheromone Matrix" )
 			print_matrix( visibility_matrix, "Visibility Matrix" )
-	# 	path_list = send_ants()
-	# 	cost_list = print_ant_results( path_list )
+		path_list = send_ants()
+		# cost_list = print_ant_results( path_list )
 	# 	update_pheromone_matrix( path_list, cost_list )
 
 	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )

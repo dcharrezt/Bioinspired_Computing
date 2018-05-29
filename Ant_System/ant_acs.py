@@ -19,7 +19,7 @@ initial_pheromones = .1
 
 alpha = 1
 beta = 1
-p = 0.01
+p = 0.99
 Q = 1
 q_0 = 0.7
 phi = 0.5
