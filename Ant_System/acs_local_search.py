@@ -18,7 +18,7 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11, 89, 97, 52],
 
 # Parameters
 
-p = 0.1
+p = 0.01
 alpha = 1
 beta = 2
 q_0 = 0.9
@@ -27,7 +27,7 @@ phi = 0.1
 initial_pheromones = 1.
 
 n_ants = 10
-n_iterations = 150
+n_iterations = 50
 n_cities = 13
 
 n_mutation = 10
@@ -213,7 +213,7 @@ def update_pheromone_matrix( path_list, costs_lists ):
 			if i != j :
 				print(cities[i]+" "+cities[j]+": Pheromone = ", end='')
 				delta = get_delta(i, j)
-				print( str(1-p)+"*"+str(pheromone_matrix[i][j])+\
+				print( str(1.-p)+"*"+str(pheromone_matrix[i][j])+\
 									"+"+str(delta)+" = ", end='')
 				pheromone_matrix[i][j] *= (1-p)+p*delta
 				print( pheromone_matrix[i][j] )

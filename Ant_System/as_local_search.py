@@ -18,7 +18,7 @@ distance_matrix = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11, 89, 97, 52],
 
 # Parameters
 
-p = 0.97
+p = 0.99
 alpha = 1
 beta = 1
 Q = 1
