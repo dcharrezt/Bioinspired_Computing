@@ -12,8 +12,9 @@ max_x = 5
 min_y = -5
 max_y = 5
 
-n_iterations = 3
-n_particles = 2
+n_iterations = 100
+n_particles = 6
+n_dimesions = 2
 
 phi_1 = 2.0
 phi_2 = 2.0
@@ -40,17 +41,20 @@ def create_swarm():
 
 def print_swarm():
 	for part in data:
-		print( "x1 = "+str(part["pos"][0])+
-			   " x2 = "+str(part["pos"][1])+
-			   " v1 = "+str(part["vel"][0])+
-			   " v2 = "+str(part["vel"][1]) )
+		print( "x = "+str(part["pos"][0])+
+			   " y = "+str(part["pos"][1])+
+			   " v_x = "+str(part["vel"][0])+
+			   " v_y = "+str(part["vel"][1]) )
 
-# def updating_swarm():
-# 	for part in data:
-# 		for i in range( n_particles ):
-# 			w = random.random()
-# 			rand_1 = random.random()
-# 			rand_2 = random.random()
+def updating_swarm():
+	for part in data:
+		for i in range( n_dimesions ):
+			w = random.random()
+			rand_1 = random.random()
+			rand_2 = random.random()
+			V = w*part["pos"][i] + phi_1*rand_1*(part["p_best"]["x"]-\
+				part["pos"][i] ) + phi_2*rand_2*(best_global["x"]-part["pos"][i])
+			part["pos"][i] += V
 
 def evaluating_swarm():
 	print("****** Fitness")
@@ -76,9 +80,10 @@ def pso():
 		print("Iteration: ", i )
 		print("Best particle so far: ")
 		print("x = "+str(best_global["x"])+" y = "+str(best_global["y"])+\
-					" fitness" +str(best_global["fitness"]))
+					" fitness " +str(best_global["fitness"]))
 		print("Next swarm ")
 		updating_swarm()
+		print_swarm()
 		evaluating_swarm()
 
 
