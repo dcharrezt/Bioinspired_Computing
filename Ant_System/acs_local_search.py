@@ -262,7 +262,7 @@ def ACS_algorithm():
 		local_search( path_list, cost_list )
 		update_pheromone_matrix( path_list, cost_list )
 
-	print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
+	# print_matrix( pheromone_matrix, " Updated Pheromone Matrix " )
 
 
 if __name__ == "__main__":
