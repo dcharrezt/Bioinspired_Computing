@@ -60,10 +60,14 @@ def substract_permutations( path_1, path_2 ):
 	return SS
 	
 def update_particle( particle ):
+	print( "1 ", particle['path'] )
 	for i in particle['vel']:
 		tmp = particle['path'][i[0]]
 		particle['path'][i[0]] = particle['path'][i[1]]
 		particle['path'][i[1]] = tmp
+	particle['vel'] = []
+	print( "2 ", particle['path'] )
+
 
 def pso():
 	print("****** Starting PSO")
@@ -79,9 +83,12 @@ def pso():
 			print("Velocity: ", i['vel'] , end='\n\n' )
 			a = substract_permutations( i['path'], best_global['path'])
 			b = substract_permutations( i['path'], i['best_local_path'])
-			i['vel'] = a + b
+			i['vel'] = list(a + b)
 			update_particle( i )
+		print("Best Global *** ")
+		print("Path: ", best_global['path'])
+		print("Fitness: ", best_global['fitness'])
+		print("")
 
 if __name__=="__main__":
 	pso()
-	# print ( substract_permutations( [0,2, 4, 1, 3], [0, 1, 4, 3, 2]  ) ) 
