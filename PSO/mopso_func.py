@@ -118,6 +118,14 @@ def update_local_repository():
 	for i in range( n_particles ):
 		data[i]["repo"].append( data[i] )
 
+def best_local_particle( particle ):
+	rand = random.randint(0, len(particle["repo"]) - 1)
+	return particle["repo"][rand]
+
+def best_global_particle():
+	rand = random.randint(0, len( global_repository ) -1 )
+	return global_repository[ rand ]
+
 def mopso():
 	print("****** Starting PSO")
 	create_swarm()
@@ -131,6 +139,10 @@ def mopso():
 
 	for i in range( n_iterations ):
 		print("Iteration: ", i )
+		for i in range( n_particles ):
+			pLocal = best_local_particle( data[i] )
+			pGlocal = best_global_particle()
+
 
 
 if __name__=="__main__":
