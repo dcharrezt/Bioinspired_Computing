@@ -1,12 +1,12 @@
 import numpy as np
 import random
-
+import copy
 
 
 # parameters
 
 n_iterations = 2
-n_particles = 6
+n_particles = 4
 n_dimesions = 2
 
 min_v = -1
@@ -17,6 +17,9 @@ max_x = 5
 
 min_y = 0
 max_y = 3
+
+phi_1 = 2.0
+phi_2 = 2.0
 
 data = []
 global_repository = []
@@ -51,22 +54,13 @@ def dominate( particle_1, particle_2 ):
 	return False
 
 def evaluating_swarm():
-	print("****** Fitness")
-	for part, i in zip(data, range(n_particles)):
-		part["fitness_1"] = function_1( part["pos"][0], part["pos"][1] )
-		part["fitness_2"] = function_2( part["pos"][0], part["pos"][1] )
-
-
-
-		# if part["p_best"]["fitness"] > part["fitness"]:
-		# 	part["p_best"]["x"] = part["pos"][0] 
-		# 	part["p_best"]["y"] = part["pos"][1] 
-		# 	part["p_best"]["fitness"] = part["fitness"]
-		# if best_global["fitness"] > part["fitness"]:
-		# 	best_global["x"] = part["pos"][0]
-		# 	best_global["y"] = part["pos"][1]
-		# 	best_global["fitness"] = part["fitness"]
-		print(str(i)+" ) "+str(part["fitness_1"])+"\t"+str(part["fitness_2"]))
+	for part, i in zip(data, range( len(data))):
+		if( part["pos"][0] < min_x or part["pos"][0] > max_x ) or \
+			( part["pos"][1] < min_y or part["pos"][1] > max_y ):
+			del data[i]
+		else:
+			part["fitness_1"] = function_1( part["pos"][0], part["pos"][1] )
+			part["fitness_2"] = function_2( part["pos"][0], part["pos"][1] )
 
 def print_swarm():
 	for i in range(len(data)):
@@ -111,20 +105,37 @@ def non_dominated_sort():
 	return frontiers
 
 def update_global_repository( pareto_front ):
+	global global_repository
 	for i in pareto_front:
-		global_repository.append( data[i] )
+		if (( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
+			( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y )):
+			print("deleted out range")
+			del global_repository[i]
+		else:
+			global_repository.append( copy.deepcopy(data[i]) )
 
 def update_local_repository():
-	for i in range( n_particles ):
-		data[i]["repo"].append( data[i] )
+	for i in range( len(data) ):
+		data[i]["repo"].append( copy.deepcopy(data[i]) )
 
 def best_local_particle( particle ):
+	print("PARTICLEEE ", particle)
 	rand = random.randint(0, len(particle["repo"]) - 1)
 	return particle["repo"][rand]
 
 def best_global_particle():
 	rand = random.randint(0, len( global_repository ) -1 )
 	return global_repository[ rand ]
+
+def updating_position( particle, pLocal, pGlobal ):
+	for i in range( n_dimesions ):
+		w = random.random()
+		rand_1 = random.random()
+		rand_2 = random.random()
+		V = w*particle["pos"][i] + phi_1*rand_1*(pLocal["pos"][i]-\
+			particle["pos"][i] ) + phi_2*rand_2*(pGlobal["pos"][i]- \
+			particle["pos"][i])
+		particle["pos"][i] += V
 
 def mopso():
 	print("****** Starting PSO")
@@ -139,11 +150,22 @@ def mopso():
 
 	for i in range( n_iterations ):
 		print("Iteration: ", i )
-		for i in range( n_particles ):
-			pLocal = best_local_particle( data[i] )
+		for i in range( len(data) ):
+			pLocal = best_local_particle( copy.deepcopy(data[i]) )
 			pGlocal = best_global_particle()
-
-
+			updating_position(data[i], pLocal, pGlocal)
+		evaluating_swarm()
+		pareto_front = non_dominated_sort()
+		update_global_repository( pareto_front[0] )
+		update_local_repository()
+	for i in range(len(global_repository)):
+		print( "particle #" + str(i) +
+			   "\nx = "+str(global_repository[i]["pos"][0])+
+			   "\ny = "+str(global_repository[i]["pos"][1])+
+			   "\nv_x = "+str(global_repository[i]["vel"][0])+
+			   "\nv_y = "+str(global_repository[i]["vel"][1])+
+			   "\nfitness_1 = "+str(global_repository[i]["fitness_1"] )+
+			   "\nfitness_2 = "+str(global_repository[i]["fitness_2"] ))
 
 if __name__=="__main__":
 	mopso()
