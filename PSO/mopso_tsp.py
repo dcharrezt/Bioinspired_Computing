@@ -24,7 +24,7 @@ cost_between_cities = [ [0, 22, 47, 15, 63, 21, 23, 16, 11, 9],
 						[11, 26, 8, 14, 56, 22, 25, 66, 0, 54],
 						[9, 43, 36, 12, 23, 14, 60, 85, 54, 0]]
 
-n_iterations = 10
+n_iterations = 3
 n_particles = 4
 n_dimesions = 2
 n_fitness_functions = 2
@@ -33,16 +33,21 @@ n_cities = 10
 phi_1 = 1.0
 phi_2 = 1.0
 
-data = []
-global_repository = []
-
 class Particle:
-	def __init__(self, path, f_distance, f_cost):
+	def __init__(self, path):
 		self.path = path[:]
 		self.velocity = []
-		self.f_distance = f_distance
-		self.f_cost = f_cost
+		self.f_distance = np.inf
+		self.f_cost = np.inf
 		self.local_repository = []
+
+data = []
+random_particle = Particle([0])
+random_particle.f_distance = np.inf
+random_particle.f_cost = np.inf
+global_repository = []
+global_repository.append( random_particle )
+
 
 def fitness_distance( path ):
 	distance = 0.
@@ -59,22 +64,94 @@ def fitness_cost( path ):
 def create_swarm():
 	for i in range( n_particles ):
 		path = np.random.permutation( n_cities )
-		f_distance = fitness_distance( path )
-		f_cost = fitness_cost( path )
-		data.append( Particle(path, f_distance, f_cost ) ) 
+		tmp = Particle(path)
+		tmp.local_repository.append( copy.deepcopy(tmp) )
+		data.append( copy.deepcopy(tmp) ) 
+
+def evaluate_swarm():
+	for i in data:
+		i.f_distance = fitness_distance( i.path )
+		i.f_cost = fitness_cost( i.path )
+
+def dominate( particle_1, particle_2 ):
+	if( ( particle_1.f_distance < particle_2.f_distance  and \
+		  particle_1.f_cost < particle_2.f_cost ) or \
+		( particle_1.f_distance <= particle_2.f_distance and \
+		  particle_1.f_cost < particle_2.f_cost ) or \
+		( particle_1.f_distance < particle_2.f_distance and \
+		  particle_1.f_cost <= particle_2.f_cost ) ):
+		return True
+	return False
+
+def update_global_repository():
+	global global_repository
+	for i in data:
+
+		print("GLObal")
+		for m in global_repository:
+			print(m.path)
+			print(m.f_distance)
+			print(m.f_cost)
+		print()
+
+		non_dominated_indexes = []
+		new_pareto = []
+		for j in range( len( global_repository )  ):
+			print( str(i.f_distance) + " " + str(global_repository[j].f_distance))
+			print( str(i.f_cost) + " " + str(global_repository[j].f_cost))
+			print(( dominate( i, global_repository[j] ) ))
+			if not ( dominate( i, global_repository[j] ) ):
+				non_dominated_indexes.append( j )
+		print("NON ", non_dominated_indexes)
+		# if len( non_dominated_indexes ) != len( global_repository ):
+		# 	print("Equal Lenght")
+		for k in non_dominated_indexes:
+			new_pareto.append( copy.deepcopy(global_repository[k]) )
+		new_pareto.append( copy.deepcopy( i ) )
+		global_repository = copy.deepcopy( new_pareto )
+
+def update_local_repository():
+	for i in data:
+		non_dominated_indexes = []
+		new_pareto = []
+		for j in range( len(i.local_repository) ):
+			if not ( dominate( i, i.local_repository[j] ) ):
+				non_dominated_indexes.append( j )
+		if len( non_dominated_indexes ) != len( i.local_repository ):
+			for k in non_dominated_indexes:
+				new_pareto.append( i.local_repository[k] )
+			new_pareto.append( copy.deepcopy( i ) )
+			i.local_repository = copy.deepcopy( new_pareto )
 
 def mopso_tsp():
 	create_swarm()
+	evaluate_swarm()
+	update_global_repository()
+	update_local_repository()
 	for i in range( n_iterations ):
-		print( "Iteation ", i )
+		print( "+++++ Iteration ", i )
 
 
 
 if __name__=="__main__":
 	mopso_tsp()
 
-	
-	# for i in data:
+
+	for i in data:
+		print(i.path)
+		print(i.f_distance)
+		print(i.f_cost)
+
+	print("GLObal")
+	for m in global_repository:
+		print(m.path)
+		print(m.f_distance)
+		print(m.f_cost)
+	print()
+
+	# print("GLObal")
+
+	# for i in global_repository:
 	# 	print(i.path)
 	# 	print(i.f_distance)
 	# 	print(i.f_cost)
