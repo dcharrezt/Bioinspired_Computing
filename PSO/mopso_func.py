@@ -125,7 +125,7 @@ def update_local_repository():
 		if len( data[i]["repo"] ) == 0:
 			data[i]["repo"].append( copy.deepcopy(data[i]) )
 		else:
-			new_swarm = data[i]["repo"] + data[i]
+			new_swarm = data[i]["repo"] + list(data[i])
 			pareto_front = non_dominated_sort( new_swarm )
 			data[i]["repo"] = []
 			for j in range( len(new_swarm) ):
