@@ -128,9 +128,9 @@ def update_local_repository():
 			new_swarm = data[i]["repo"] + data[i]
 			pareto_front = non_dominated_sort( new_swarm )
 			data[i]["repo"] = []
-			for i in range( len(new_swarm) ):
-				if i in pareto_front[0]:
-					data[i]["repo"].append( copy.deepcopy(new_swarm[i]) )
+			for j in range( len(new_swarm) ):
+				if j in pareto_front[0]:
+					data[i]["repo"].append( copy.deepcopy(new_swarm[j]) )
 
 def best_local_particle( particle ):
 	print("PARTICLEEE ", particle)

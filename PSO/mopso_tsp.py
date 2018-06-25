@@ -69,6 +69,19 @@ def evaluate_swarm():
 		i.f_distance = fitness_distance( i.path )
 		i.f_cost = fitness_cost( i.path )
 
+def substract_permutations( path_1, path_2 ):
+	SS = []
+	tmp_1 = list( path_1 )
+	tmp_2 = list( path_2 )
+	for i in range( n_cities ):
+		if tmp_1[i] != tmp_2[i]:
+			index = tmp_2.index( tmp_1[i] )
+			SS.append([i , index])
+			tmp = tmp_2[i]
+			tmp_2[i] = tmp_2[index]
+			tmp_2[index] = tmp 
+	return SS
+
 def dominate( particle_1, particle_2 ):
 	if( ( particle_1.f_distance < particle_2.f_distance  and \
 		  particle_1.f_cost < particle_2.f_cost ) or \
@@ -79,32 +92,64 @@ def dominate( particle_1, particle_2 ):
 		return True
 	return False
 
-def update_global_repository():
-	global global_repository
-	if len( global_repository ) == 0:
-		global_repository.append( copy.deepcopy(data[0]) )
+def non_dominated_sort( from_data ):
+	S = []
+	N = []
+	rank = []
+	frontiers = [[]]
+	
+	for i in range( len( from_data ) ):
+		S.append([])
+		N.append( 0 )
+		rank.append( 0 )
 
-	for i in data:
-		for j in global_repository:
-			
+	for p in  range(len( from_data )) :
+		for q in range(len( from_data )):
+			if( dominate(from_data[p], from_data[q]) ):
+				S[p].append(q)
+			elif( dominate( from_data[q], from_data[p]) ):
+				N[p] += 1
+		if(N[p] == 0):
+			rank[p] = 0
+			frontiers[0].append(p)
+	i = 0
+	while( frontiers[i] != [] ):
+		Q = []
+		for p in frontiers[i]:
+			for q in S[p]:
+				N[q] -= 1
+				if( N[q] == 0 ):
+					rank[q] = i+1
+					Q.append(q)
+		i += 1
+		frontiers.append( Q )
+	del frontiers[len(frontiers)-1]
+	return frontiers
+
+def update_global_repository( pareto_front, from_data ):
+	global global_repository
+	global_repository = []
+	for i in range( len(from_data) ):
+		if i in pareto_front:
+			global_repository.append( copy.deepcopy(from_data[i]) )
 
 def update_local_repository():
-	for i in data:
-		non_dominated_indexes = []
-		new_pareto = []
-		for j in range( len(i.local_repository) ):
-			if not ( dominate( i, i.local_repository[j] ) ):
-				non_dominated_indexes.append( j )
-		if len( non_dominated_indexes ) != len( i.local_repository ):
-			for k in non_dominated_indexes:
-				new_pareto.append( i.local_repository[k] )
-			new_pareto.append( copy.deepcopy( i ) )
-			i.local_repository = copy.deepcopy( new_pareto )
+	for i in range( len(data) ):
+		if len( data[i]["repo"] ) == 0:
+			data[i]["repo"].append( copy.deepcopy( data[i] ) )
+		else:
+			new_data = data[i]["repo"] + data[i]
+			new_pareto = non_dominated_sort( new_data )
+			data[i]["repo"] = []
+			for j in range( len( new_data) ):
+				if j in new_pareto[0]:
+					data[i]["repo"].append( copy.append( new_data[j] ) )
 
 def mopso_tsp():
 	create_swarm()
 	evaluate_swarm()
-	update_global_repository()
+	pareto_front = non_dominated_sort( data )
+	update_global_repository( pareto_front[0], data )
 	update_local_repository()
 	for i in range( n_iterations ):
 		print( "+++++ Iteration ", i )
