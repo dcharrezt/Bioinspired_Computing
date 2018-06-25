@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # parameters
 
-n_iterations = 5
+n_iterations = 10
 n_particles = 4
 n_dimesions = 2
 
@@ -120,19 +120,17 @@ def update_global_repository( pareto_front, swarm ):
 		if i in pareto_front:
 			global_repository.append( copy.deepcopy( swarm[i] ) )
 
-	# for i in pareto_front:
-	# 	if (( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
-	# 		( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y )):
-	# 		print("deleted out range")
-	# 		indexes_to_delete.append( i )
-	
-	# for i in range( global_repository ):
-
-
-
 def update_local_repository():
 	for i in range( len(data) ):
-		data[i]["repo"].append( copy.deepcopy(data[i]) )
+		if len( data[i]["repo"] ) == 0:
+			data[i]["repo"].append( copy.deepcopy(data[i]) )
+		else:
+			new_swarm = data[i]["repo"] + data[i]
+			pareto_front = non_dominated_sort( new_swarm )
+			data[i]["repo"] = []
+			for i in range( len(new_swarm) ):
+				if i in pareto_front[0]:
+					data[i]["repo"].append( copy.deepcopy(new_swarm[i]) )
 
 def best_local_particle( particle ):
 	print("PARTICLEEE ", particle)
