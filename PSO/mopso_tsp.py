@@ -135,15 +135,41 @@ def update_global_repository( pareto_front, from_data ):
 
 def update_local_repository():
 	for i in range( len(data) ):
-		if len( data[i]["repo"] ) == 0:
-			data[i]["repo"].append( copy.deepcopy( data[i] ) )
+		if len( data[i].local_repository ) == 0:
+			data[i].local_repository.append( copy.deepcopy( data[i] ) )
 		else:
-			new_data = data[i]["repo"] + data[i]
+			new_data = data[i].local_repository + data[i]
 			new_pareto = non_dominated_sort( new_data )
-			data[i]["repo"] = []
+			data[i].local_repository = []
 			for j in range( len( new_data) ):
 				if j in new_pareto[0]:
-					data[i]["repo"].append( copy.append( new_data[j] ) )
+					data[i].local_repository.append( copy.append( new_data[j] ) )
+
+def best_local_particle( particle ):
+	rand = random.randint(0, len(particle.local_repository) - 1)
+	return particle.local_repository[rand]
+
+def best_global_particle():
+	rand = random.randint(0, len( global_repository ) -1 )
+	return global_repository[ rand ]
+
+def updating_position( particle, pLocal, pGlobal ):
+	for i in range( n_dimesions ):
+		w = random.random()
+		rand_1 = random.random()
+		rand_2 = random.random()
+		V = w*particle["pos"][i] + phi_1*rand_1*(pLocal["pos"][i]-\
+			particle["pos"][i] ) + phi_2*rand_2*(pGlobal["pos"][i]- \
+			particle["pos"][i])
+		particle["pos"][i] += V
+
+	print( "1 ", particle['path'] )
+	for i in SS:
+		tmp = particle['path'][i[0]]
+		particle['path'][i[0]] = particle['path'][i[1]]
+		particle['path'][i[1]] = tmp
+	particle['vel'] = []
+	print( "2 ", particle['path'] )
 
 def mopso_tsp():
 	create_swarm()
@@ -153,8 +179,14 @@ def mopso_tsp():
 	update_local_repository()
 	for i in range( n_iterations ):
 		print( "+++++ Iteration ", i )
-
-
+		for i in range( len(data) ):
+			pLocal = best_local_particle( copy.deepcopy(data[i]) )
+			pGlocal = copy.deepcopy(best_global_particle())
+			a = substract_permutations( data[i].path, pGlocal.path )
+			b = substract_permutations( data[i].path, pLocal.path )
+			SS = list(a + b)
+			updating_position(data[i], SS)
+		evaluating_swarm()
 
 if __name__=="__main__":
 	mopso_tsp()
