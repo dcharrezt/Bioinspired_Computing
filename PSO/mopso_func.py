@@ -54,6 +54,7 @@ def dominate( particle_1, particle_2 ):
 	return False
 
 def evaluating_swarm():
+	global data
 	indexes_to_delete = []
 	for i in range( len(data) ):
 		if  ( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
@@ -111,14 +112,19 @@ def non_dominated_sort( from_data ):
 	del frontiers[len(frontiers)-1]
 	return frontiers
 
-def update_global_repository( pareto_front ):
+def update_global_repository( pareto_front, swarm ):
 	global global_repository
-	indexes_to_delete = []
-	for i in pareto_front:
-		if (( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
-			( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y )):
-			print("deleted out range")
-			indexes_to_delete.append( i )
+	global_repository = []
+	# indexes_to_delete = []
+	for i in range( len(swarm) ):
+		if i in pareto_front:
+			global_repository.append( copy.deepcopy( swarm[i] ) )
+
+	# for i in pareto_front:
+	# 	if (( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
+	# 		( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y )):
+	# 		print("deleted out range")
+	# 		indexes_to_delete.append( i )
 	
 	# for i in range( global_repository ):
 
@@ -154,7 +160,7 @@ def mopso():
 	evaluating_swarm()
 
 	pareto_front = non_dominated_sort( data )
-	update_global_repository( pareto_front[0] )
+	update_global_repository( pareto_front[0], data )
 	update_local_repository()
 
 
@@ -165,8 +171,9 @@ def mopso():
 			pGlocal = best_global_particle()
 			updating_position(data[i], pLocal, pGlocal)
 		evaluating_swarm()
-		pareto_front = non_dominated_sort( data )
-		update_global_repository( pareto_front[0] )
+		new_swarm = data + global_repository
+		pareto_front = non_dominated_sort( new_swarm )
+		update_global_repository( pareto_front[0], new_swarm )
 		# update_local_repository()
 	for i in range(len(global_repository)):
 		print( "particle #" + str(i) +
