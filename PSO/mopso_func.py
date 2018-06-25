@@ -1,11 +1,11 @@
 import numpy as np
 import random
 import copy
-
+import matplotlib.pyplot as plt
 
 # parameters
 
-n_iterations = 2
+n_iterations = 5
 n_particles = 4
 n_dimesions = 2
 
@@ -25,16 +25,16 @@ data = []
 global_repository = []
 
 def function_1( x, y ):
-	return 4*x**2 + 4*x**2
+	return 4*(x**2) + 4*(y**2)
 
-def function_2( x, y):
+def function_2( x, y ):
 	return (x-5)**2 + (y-5)**2
 
 def create_particle():
 	x = random.uniform(min_x, max_x)
 	y = random.uniform(min_y, max_y)
-	v_x = random.uniform(-1, 1)
-	v_y = random.uniform(-1, 1)
+	v_x = random.uniform(min_v, max_v)
+	v_y = random.uniform(min_v, max_v)
 	fitness = np.inf
 	return { "pos": [x, y], "vel": [v_x, v_y], "fitness_1": fitness,\
 						"fitness_2": fitness, "repo": [] } 
@@ -54,13 +54,20 @@ def dominate( particle_1, particle_2 ):
 	return False
 
 def evaluating_swarm():
-	for part, i in zip(data, range( len(data))):
-		if( part["pos"][0] < min_x or part["pos"][0] > max_x ) or \
-			( part["pos"][1] < min_y or part["pos"][1] > max_y ):
-			del data[i]
+	indexes_to_delete = []
+	for i in range( len(data) ):
+		if  ( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
+			( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y ):
+			indexes_to_delete.append( i )
 		else:
-			part["fitness_1"] = function_1( part["pos"][0], part["pos"][1] )
-			part["fitness_2"] = function_2( part["pos"][0], part["pos"][1] )
+			data[i]["fitness_1"] = function_1( data[i]["pos"][0], data[i]["pos"][1] )
+			data[i]["fitness_2"] = function_2( data[i]["pos"][0], data[i]["pos"][1] )
+	tmp_data = []
+	for i in range( len( data ) ):
+		if i not in indexes_to_delete:
+			tmp_data.append( copy.deepcopy( data[i] ) )
+	data = []
+	data = copy.deepcopy( tmp_data )
 
 def print_swarm():
 	for i in range(len(data)):
@@ -70,22 +77,22 @@ def print_swarm():
 			   " v_x = "+str(data[i]["vel"][0])+
 			   " v_y = "+str(data[i]["vel"][1]) )
 
-def non_dominated_sort():
+def non_dominated_sort( from_data ):
 	S = []
 	N = []
 	rank = []
 	frontiers = [[]]
 	
-	for i in range( len( data ) ):
+	for i in range( len( from_data ) ):
 		S.append([])
 		N.append( 0 )
 		rank.append( 0 )
 
-	for p in  range(len( data )) :
-		for q in range(len( data )):
-			if( dominate(data[p], data[q]) ):
+	for p in  range(len( from_data )) :
+		for q in range(len( from_data )):
+			if( dominate(from_data[p], from_data[q]) ):
 				S[p].append(q)
-			elif( dominate( data[q], data[p]) ):
+			elif( dominate( from_data[q], from_data[p]) ):
 				N[p] += 1
 		if(N[p] == 0):
 			rank[p] = 0
@@ -106,13 +113,16 @@ def non_dominated_sort():
 
 def update_global_repository( pareto_front ):
 	global global_repository
+	indexes_to_delete = []
 	for i in pareto_front:
 		if (( data[i]["pos"][0] < min_x or data[i]["pos"][0] > max_x ) or \
 			( data[i]["pos"][1] < min_y or data[i]["pos"][1] > max_y )):
 			print("deleted out range")
-			del global_repository[i]
-		else:
-			global_repository.append( copy.deepcopy(data[i]) )
+			indexes_to_delete.append( i )
+	
+	# for i in range( global_repository ):
+
+
 
 def update_local_repository():
 	for i in range( len(data) ):
@@ -143,7 +153,7 @@ def mopso():
 	print_swarm()
 	evaluating_swarm()
 
-	pareto_front = non_dominated_sort()
+	pareto_front = non_dominated_sort( data )
 	update_global_repository( pareto_front[0] )
 	update_local_repository()
 
@@ -155,9 +165,9 @@ def mopso():
 			pGlocal = best_global_particle()
 			updating_position(data[i], pLocal, pGlocal)
 		evaluating_swarm()
-		pareto_front = non_dominated_sort()
+		pareto_front = non_dominated_sort( data )
 		update_global_repository( pareto_front[0] )
-		update_local_repository()
+		# update_local_repository()
 	for i in range(len(global_repository)):
 		print( "particle #" + str(i) +
 			   "\nx = "+str(global_repository[i]["pos"][0])+
@@ -169,5 +179,11 @@ def mopso():
 
 if __name__=="__main__":
 	mopso()
+
+	plt.plot([ i["fitness_1"] for i in global_repository ], \
+				[i["fitness_2"] for i in global_repository], 'ro')
+	# plt.axis([0, 6, 0, 20])
+	plt.show()
+
 
 

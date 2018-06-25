@@ -1,6 +1,7 @@
 import random
 import copy
 import numpy as np
+import matplotlib.pyplot as plt
 
 city_distances = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
 				   [12, 0, 9, 18, 3, 41, 45, 5, 41, 27],
@@ -25,7 +26,7 @@ cost_between_cities = [ [0, 22, 47, 15, 63, 21, 23, 16, 11, 9],
 						[9, 43, 36, 12, 23, 14, 60, 85, 54, 0]]
 
 n_iterations = 3
-n_particles = 4
+n_particles = 20
 n_dimesions = 2
 n_fitness_functions = 2
 n_cities = 10
@@ -42,12 +43,7 @@ class Particle:
 		self.local_repository = []
 
 data = []
-random_particle = Particle([0])
-random_particle.f_distance = np.inf
-random_particle.f_cost = np.inf
 global_repository = []
-global_repository.append( random_particle )
-
 
 def fitness_distance( path ):
 	distance = 0.
@@ -85,30 +81,12 @@ def dominate( particle_1, particle_2 ):
 
 def update_global_repository():
 	global global_repository
+	if len( global_repository ) == 0:
+		global_repository.append( copy.deepcopy(data[0]) )
+
 	for i in data:
-
-		print("GLObal")
-		for m in global_repository:
-			print(m.path)
-			print(m.f_distance)
-			print(m.f_cost)
-		print()
-
-		non_dominated_indexes = []
-		new_pareto = []
-		for j in range( len( global_repository )  ):
-			print( str(i.f_distance) + " " + str(global_repository[j].f_distance))
-			print( str(i.f_cost) + " " + str(global_repository[j].f_cost))
-			print(( dominate( i, global_repository[j] ) ))
-			if not ( dominate( i, global_repository[j] ) ):
-				non_dominated_indexes.append( j )
-		print("NON ", non_dominated_indexes)
-		# if len( non_dominated_indexes ) != len( global_repository ):
-		# 	print("Equal Lenght")
-		for k in non_dominated_indexes:
-			new_pareto.append( copy.deepcopy(global_repository[k]) )
-		new_pareto.append( copy.deepcopy( i ) )
-		global_repository = copy.deepcopy( new_pareto )
+		for j in global_repository:
+			
 
 def update_local_repository():
 	for i in data:
@@ -148,6 +126,11 @@ if __name__=="__main__":
 		print(m.f_distance)
 		print(m.f_cost)
 	print()
+
+	plt.plot([ i.f_distance for i in global_repository ], \
+				[i.f_cost for i in global_repository], 'ro')
+	# plt.axis([0, 6, 0, 20])
+	plt.show()
 
 	# print("GLObal")
 
