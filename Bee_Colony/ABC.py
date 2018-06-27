@@ -18,8 +18,8 @@ max_y = 5
 
 solutions = []
 
-def function( x, y ):
-	return x**2 + y**2
+def function( x ):
+	return x[0]**2 + x[1]**2
 
 def fitness( funct ):
 	if( funct >= 0 ):
@@ -29,9 +29,12 @@ def fitness( funct ):
 
 def init_solutions():
 	for i in range( n_solutions ):
+		vect = []
 		x = random.uniform( min_x, max_x )
 		y = random.uniform( min_y, max_y )
-		func = function( x, y)
+		vect.append(x)
+		vect.append(y)
+		func = function( vect )
 		fit = fitness( func )
 		solutions.append( { "v":[ x, y], "func": func, "fit": fit, "cont": 0 } )
 
@@ -43,15 +46,22 @@ def new_solutions():
 		k = random.randint( 0, n_solutions-1 )
 		for i in range( n_dimensions ):
 			if i == j:
-				solutions[m]["v"][i] + phi * ( solutions[m]["v"][i] - 
-											solutions[k]["v"][i] )
+				tmp = solutions[m]["v"][i] +  phi * ( solutions[m]["v"][i] -
+					  					solutions[k]["v"][i] )
+				solutions[m]["v"][i] = tmp
+				new_func = function( solutions[m]["v"] )
+				new_fit = fitness( new_func )
+				if new_fit > solutions[m]["fit"]:
+					solutions[m]["cont"] += 1
+				solutions[m]["fit"] = new_fit
+
 
 def abc():
 
 	init_solutions()
-	print( solutions )
+	# print( solutions )
 	new_solutions()
-	print( solutions )
+	# print( solutions )
 
 
 	for i in range( n_iterations ):
