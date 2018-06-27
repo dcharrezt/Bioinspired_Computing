@@ -3,7 +3,7 @@ import random
 import math
 import copy
 
-n_iterations = 5
+n_iterations = 50
 n_solutions = 3
 n_dimensions = 2
 
@@ -71,6 +71,7 @@ def roulette_selection():
 			return i
 
 def print_solutions():
+	print( " solutions +++++  ")
 	print( "V_1\t\t\tV_2\t\t\tFunction\t\tFitness\t\t\tCounter" )
 	for i in solutions:
 		print( str(i["v"][0])+"\t"+str(i["v"][1])+"\t"+str(i["func"])+"\t"
@@ -85,14 +86,48 @@ def print_new_solutions():
 def compare_solutions():
 	for i in range( n_solutions ):
 		if new_solutions[i]["fit"] > solutions[i]["fit"]:
-			print("asdasdasfskdjfl")
 			solutions[i]["v"] = copy.deepcopy( new_solutions[i]["v"] )
 			solutions[i]["func"] = copy.deepcopy( new_solutions[i]["func"] )
 			solutions[i]["fit"] = copy.deepcopy( new_solutions[i]["fit"] )
 		else:
-			solutions[i]["cont"] += 1 
+			solutions[i]["cont"] += 1
+
+def observer_solution( a ):
+	phi = random.uniform( -1, 1 )
+	j = random.randint( 0, n_dimensions-1 )
+	k = random.randint( 0, n_solutions-1 )
+	new_v_j = solutions[a]["v"][j]+phi*(solutions[a]["v"][j]-solutions[k]["v"][j])
+
+	new_v  = [0]*n_dimensions
+	new_v[j] =new_v_j
+	new_v[new_v.index( 0 )] = solutions[a]["v"][new_v.index( 0 )]
+	new_func = function( new_v )
+	new_fit = fitness( new_func )
+
+	if new_fit > solutions[a]["fit"]:
+		solutions[a]["v"] = copy.deepcopy( new_v )
+		solutions[a]["func"] = copy.deepcopy( new_func )
+		solutions[a]["fit"] = copy.deepcopy( new_fit )
+	else:
+		solutions[a]["cont"] += 1
+
+def check_scout_bee():
+	best_bee_index = -1
+	max_fit = best_solution["fit"]
+	for i in range( len( solutions ) ):
+		if solutions[i]["cont"] >= limit:
+			solutions[i]["v"] = [random.uniform( min_x, max_x ), 
+								random.uniform( min_y, max_y )]
+			solutions[i]["func"] = function(solutions[i]["v"])
+			solutions[i]["fit"] = fitness( solutions[i]["func"])
+			solutions[i]["cont"] = 0
+		if solutions[i]["fit"] > max_fit:
+			max_fit = solutions[i]["fit"]
+			best_bee_index = i
+	return best_bee_index
 
 def abc():
+	global best_solution
 	print("Initializing population ------- ")
 	init_solutions()
 	print_solutions( )
@@ -103,8 +138,18 @@ def abc():
 		compare_solutions()
 		print_solutions()
 
-		a = roulette_selection()
-		print(a)
+		for i in range( n_solutions ):
+			a = roulette_selection()
+			observer_solution( a )
+		best_bee_index = check_scout_bee()
+
+		print("ASDAASD ASD ", best_bee_index)
+		if best_bee_index >= 0:
+			best_solution = []
+			best_solution = copy.deepcopy( solutions[best_bee_index] )
 
 if __name__=="__main__":
 	abc()
+
+	print( "BEST SOLUTION ------- ")
+	print( best_solution )
