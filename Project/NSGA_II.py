@@ -3,47 +3,43 @@ import random
 import copy
 import matplotlib.pyplot as plt
 
-x_lower_limit = 0.
-x_upper_limit = 5.
-
-y_lower_limit = 0.
-y_upper_limit = 3.
 
 data = []
 
-n_functions = 2
-n_iterations = 250
-population_size = 50
+n_objectives = 2
+n_iterations = 300
+population_size = 10
 offspring_size = 10
-n_adversaries = 8
-beta = 0.5
-alpha = 1.
-mutation_prob = 0.5   # .0 - 1.
 
-city_distances = [ [0, 12, 3, 23, 1, 5, 23, 56, 12, 11],
-				   [12, 0, 9, 18, 3, 41, 45, 5, 41, 27],
-				   [3, 9, 0, 89, 56, 21, 12, 48, 14, 29],
-				   [23, 18, 89, 0, 87, 46, 75, 17, 50, 42],
-				   [1, 3, 56, 87, 0, 55, 22, 86, 14, 33],
-				   [5, 41, 21, 46, 55, 0, 21, 76, 54, 81],
-				   [23, 45, 12, 75, 22, 21, 0, 11, 57, 48],
-				   [56, 5, 48, 17, 86, 76, 11, 0, 63, 24],
-				   [12, 41, 14, 50, 14, 54, 57, 63, 0, 9],
-				   [11, 27, 29, 42, 33, 81, 48, 24, 9, 0] ]
+crossover_prob = 0.75
+mutation_prob = 0.1
 
-cost_between_cities = [ [0, 22, 47, 15, 63, 21, 23, 16, 11, 9], 
-						[22, 0, 18, 62, 41, 52, 13, 11, 26, 43],
-						[47, 18, 0, 32, 57, 44, 62, 20, 8, 36],
-						[15, 62, 32, 0, 62, 45, 75, 63, 14, 12],
-						[63, 41, 57, 62, 0, 9, 99, 42, 56, 23],
-						[21, 52, 44, 45, 9, 0, 77 ,58, 22, 14],
-						[23, 13, 62, 75, 99, 77, 0, 30, 25, 60],
-						[16, 11, 20, 63, 42, 58, 30, 0, 66, 85],
-						[11, 26, 8, 14, 56, 22, 25, 66, 0, 54],
-						[9, 43, 36, 12, 23, 14, 60, 85, 54, 0]]
+city_distances = []
+cost_between_cities = []
+
+path_dataset_cost = "datasets/small_cost.txt"
+path_dataset_delay = "datasets/small_delay.txt"
+
+cost_matrix = []
+delay_matrix = []
 
 
-n_cities = len( city_distances )
+n_cabs = 0.
+n_passengers = 0.
+
+def read_data():
+	global n_cabs
+	global n_passengers
+	with open(path_dataset_cost, 'r') as f:
+		for line in f:
+			cost_matrix.append( list( [float(n) for n in line.split()] ) )
+
+	with open(path_dataset_delay, 'r') as f:
+		for line in f:
+			delay_matrix.append( list( [float(n) for n in line.split()] ) )
+
+	n_cabs = len( cost_matrix )
+	n_passengers = len( cost_matrix )
 
 def generate_individual_tsp():
 	return { "cm": np.random.permutation( n_cities ), "f_distance": np.inf, \
@@ -161,16 +157,6 @@ def tournament_selection():
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
 
-def BLX_crossover( parent_1, parent_2 ):
-	m_beta = random.uniform( beta - alpha, beta + alpha )
-	
-	m_x = parent_1["x"] + m_beta*( parent_2["x"] - parent_1["x"] )
-	m_y = parent_1["y"] + m_beta*( parent_2["y"] - parent_1["y"] )
-	m_1 = function_1( m_x, m_y )
-	m_2 = function_2( m_x, m_y )
-
-	return {"x": m_x, "y": m_y, "fitness_1": m_1, "fitness_2": m_2 }
-
 def uniform_mutation( individual ):
 	if( random.randint(0, 1) ):
 		individual["x"] = random.uniform(x_lower_limit, x_upper_limit)
@@ -278,7 +264,7 @@ def crowding_distance( frontiers ):
 	distances = dict()
 	for f in frontiers:
 		distance = [ 0. ] * len(f)
-		for m in range( n_functions ):
+		for m in range( n_objectives ):
 			m_sorted = [ [i, data[i]["fitness_"+str(m+1)]] for i in f ]
 			m_sorted = sorted( m_sorted, key=lambda x: x[1] )
 			if( len(m_sorted) > 1):
@@ -305,7 +291,7 @@ def crowding_distance_tsp( frontiers ):
 	distances = dict()
 	for f in frontiers:
 		distance = [ 0. ] * len(f)
-		for m in range( n_functions ):
+		for m in range( n_objectives ):
 			if( m == 0):
 				m_sorted = [ [i, data[i]["f_distance"]] for i in f ]
 			elif( m == 1): 
@@ -473,26 +459,7 @@ def minimize_tsp():
 	plt.show()
 
 if __name__ == "__main__":
-	minimize_tsp()
-	# minimize_F()
-	# o_1 = [0.1, 0.4, 0.51, 0.58, 0.92, 0.12, 0.26, 0.37, 0.48, 0.61]
-	# o_2 = [0.6, 0.65, 0.9, 0.21, 0.97, 0.49, 0.82, 0.3, 0.41, 0.61]
+	# minimize_tsp()
 
-	# data = []
-	# for i in range(10):
-	# 	data.append({"fitness_1": o_1[i], "fitness_2": o_2[i]})
-
-	# print(data)
-	# f = non_dominated_sort()
-	# print(f)
-	# data = [ for i in range(10) ]
-
-	# generate_population()
-	# evaluate_population()
-	# asd = non_dominated_sort()
-	# print(asd)
-	# qwe = crowding_distance( asd )
-	# print("D\t", qwe)
-	# print("\n\n",data)
-
-	# print( crowded_tournament_selection( asd, qwe ) )
+	read_data()
+	print("main")
