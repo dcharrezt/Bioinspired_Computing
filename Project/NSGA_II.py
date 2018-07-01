@@ -4,8 +4,6 @@ import copy
 import matplotlib.pyplot as plt
 
 
-data = []
-
 n_objectives = 2
 n_iterations = 300
 population_size = 10
@@ -20,10 +18,11 @@ cost_between_cities = []
 path_dataset_cost = "datasets/small_cost.txt"
 path_dataset_delay = "datasets/small_delay.txt"
 
+data = []
 cost_matrix = []
 delay_matrix = []
 
-
+max_cab_capacity = 4
 n_cabs = 0.
 n_passengers = 0.
 
@@ -40,6 +39,13 @@ def read_data():
 
 	n_cabs = len( cost_matrix )
 	n_passengers = len( cost_matrix )
+
+def generate_solution():
+	sol = list( range(0, n_passengers) )
+	cabs = [-1] * n_cabs
+	sol += cabs
+	random.shuffle( sol )
+	return { "solution": sol, "cost": np.inf, "delay": np.inf }
 
 def generate_individual_tsp():
 	return { "cm": np.random.permutation( n_cities ), "f_distance": np.inf, \
@@ -128,18 +134,6 @@ def tournament_selection_tsp():
 	sums = [ i["f_distance"]+i["f_cost"] for i in tmp ]
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
-
-def function_1( x, y):
-	return 4*(x**2) + 4*(y**2)
-
-def function_2( x, y):
-	return (x-5)**2 + (y-5)**2
-
-def generate_individual():
-	return {"x": random.uniform(x_lower_limit, x_upper_limit), \
-			"y": random.uniform(y_lower_limit, y_upper_limit), \
-			"fitness_1": np.inf, \
-			"fitness_2": np.inf }
 
 def generate_population():
 	for i in range( population_size ):
@@ -462,4 +456,6 @@ if __name__ == "__main__":
 	# minimize_tsp()
 
 	read_data()
+	a = generate_solution()
+	print(a)
 	print("main")
