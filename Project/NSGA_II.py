@@ -5,14 +5,12 @@ import matplotlib.pyplot as plt
 
 n_objectives = 2
 n_iterations = 300
-population_size = 25
+population_size = 5
 offspring_size = 10
 
 crossover_prob = 0.75
 mutation_prob = 0.1
 
-city_distances = []
-cost_between_cities = []
 
 path_dataset_cost = "datasets/small_cost.txt"
 path_dataset_delay = "datasets/small_delay.txt"
@@ -87,24 +85,27 @@ def fix_solutions():
 				else:
 					passenger_counter += 1
 
-def evaluate_population_tsp():
+def evaluate_population():
 	for i in data:
-		i["f_distance"] = fitness_distance( i )
-		i["f_cost"] = fitness_cost( i )
+		i["cost"] = fitness_cost( i )
+		i["delay"] = fitness_delay( i )
 
-def fitness_distance( individual ):
-	total_distance = 0
-	for i in range( n_cities -1 ):
-		total_distance += city_distances[ individual["cm"][i] ]\
-										[ individual["cm"][i+1] ]
-	return total_distance
-
-def fitness_cost( individual ):
+def fitness_cost( solu ):
 	total_cost = 0
-	for i in range( n_cities -1 ):
-		total_cost += cost_between_cities[ individual["cm"][i] ]\
-										[ individual["cm"][i+1] ]
+	for i in range( solution_len -1 ):
+		if solu["solution"][i] != -1 and solu["solution"][i+1] != -1:
+			total_cost += cost_matrix[ solu["solution"][i] ] \
+											[ solu["solution"][i+1] ]
 	return total_cost
+
+def fitness_delay( solu ):
+	total_delay = 0
+	for i in range( solution_len -1 ):
+		if solu["solution"][i] != -1 and solu["solution"][i+1] != -1:
+			total_delay += delay_matrix[ solu["solution"][i] ] \
+											[ solu["solution"][i+1] ]
+	return total_delay
+
 
 def PBX_crossover(individual_1, individual_2):
 	offspring = []
@@ -166,11 +167,6 @@ def tournament_selection_tsp():
 	sums = [ i["f_distance"]+i["f_cost"] for i in tmp ]
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
-
-def evaluate_population():
-	for i in data:
-		i["fitness_1"] = function_1( i["x"], i["y"] )
-		i["fitness_2"] = function_2( i["x"], i["y"] )
 
 def tournament_selection():
 	adversaries = np.random.permutation( list( range( population_size ) ) )
@@ -486,6 +482,8 @@ def NSGAII_algorithm():
 	generate_population()
 	print( data )
 	fix_solutions()
+	print( data )
+	evaluate_population()
 	print( data )
 
 if __name__ == "__main__":
