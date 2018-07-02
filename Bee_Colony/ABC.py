@@ -3,8 +3,8 @@ import random
 import math
 import copy
 
-n_iterations = 50
-n_solutions = 3
+n_iterations = 100
+n_solutions = 6
 n_dimensions = 2
 
 hive_size = 6
@@ -116,8 +116,13 @@ def check_scout_bee():
 	max_fit = best_solution["fit"]
 	for i in range( len( solutions ) ):
 		if solutions[i]["cont"] >= limit:
-			solutions[i]["v"] = [random.uniform( min_x, max_x ), 
-								random.uniform( min_y, max_y )]
+			xs = []
+			ys = [] 
+			for j in solutions:
+				xs.append( j["v"][0] )
+				ys.append( j["v"][1] )
+			solutions[i]["v"] = [min(xs)+random.uniform(0,1)*(max(xs)-min(xs)) , 
+								min(ys)+random.uniform(0,1)*(max(xs)-min(ys))]
 			solutions[i]["func"] = function(solutions[i]["v"])
 			solutions[i]["fit"] = fitness( solutions[i]["func"])
 			solutions[i]["cont"] = 0
@@ -143,7 +148,6 @@ def abc():
 			observer_solution( a )
 		best_bee_index = check_scout_bee()
 
-		print("ASDAASD ASD ", best_bee_index)
 		if best_bee_index >= 0:
 			best_solution = []
 			best_solution = copy.deepcopy( solutions[best_bee_index] )
