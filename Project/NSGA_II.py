@@ -3,10 +3,9 @@ import random
 import copy
 import matplotlib.pyplot as plt
 
-
 n_objectives = 2
 n_iterations = 300
-population_size = 10
+population_size = 25
 offspring_size = 10
 
 crossover_prob = 0.75
@@ -22,13 +21,16 @@ data = []
 cost_matrix = []
 delay_matrix = []
 
+solution_len = 0
 max_cab_capacity = 4
-n_cabs = 0.
-n_passengers = 0.
+n_cabs = 0
+n_passengers = 0
 
 def read_data():
 	global n_cabs
 	global n_passengers
+	global solution_len
+
 	with open(path_dataset_cost, 'r') as f:
 		for line in f:
 			cost_matrix.append( list( [float(n) for n in line.split()] ) )
@@ -39,6 +41,7 @@ def read_data():
 
 	n_cabs = len( cost_matrix )
 	n_passengers = len( cost_matrix )
+	solution_len = n_cabs + n_passengers
 
 def generate_solution():
 	sol = list( range(0, n_passengers) )
@@ -47,13 +50,42 @@ def generate_solution():
 	random.shuffle( sol )
 	return { "solution": sol, "cost": np.inf, "delay": np.inf }
 
-def generate_individual_tsp():
-	return { "cm": np.random.permutation( n_cities ), "f_distance": np.inf, \
-					"f_cost": np.inf }
-
-def generate_population_tsp():
+def generate_population():
 	for i in range( population_size ):
-		data.append( generate_individual_tsp() )
+		data.append( generate_solution() )
+
+def fix_solutions():
+	for sol in data:
+		something_fishy = True
+		while( something_fishy ):
+			something_fishy = False
+			passenger_counter = 0
+			for i in range( solution_len ):
+				if sol["solution"][i] == -1 or i == solution_len-1:
+					if passenger_counter <= max_cab_capacity:
+						passenger_counter = 0
+					else:
+						something_fishy = True
+						rand = random.randint(2,passenger_counter-1)
+						empty_cab_index = -1
+
+						for j in range( solution_len-1 ):
+							if( sol["solution"][j]==-1 and 
+											sol["solution"][j+1]==1 ):
+								empty_cab_index = j+1
+
+						first_passenger_index = i-passenger_counter
+						# print(first_passenger_index)
+						if( empty_cab_index < first_passenger_index ):
+							first_passenger_index -= 1
+						del sol["solution"][empty_cab_index]
+						sol["solution"].insert( first_passenger_index + rand, -1 )
+						# print(passenger_counter)
+						# print(sol)
+						passenger_counter = 0
+						i = solution_len
+				else:
+					passenger_counter += 1
 
 def evaluate_population_tsp():
 	for i in data:
@@ -134,10 +166,6 @@ def tournament_selection_tsp():
 	sums = [ i["f_distance"]+i["f_cost"] for i in tmp ]
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
-
-def generate_population():
-	for i in range( population_size ):
-		data.append( generate_individual() )
 
 def evaluate_population():
 	for i in data:
@@ -452,10 +480,14 @@ def minimize_tsp():
 	# plt.axis([0, 6, 0, 20])
 	plt.show()
 
-if __name__ == "__main__":
-	# minimize_tsp()
+def NSGAII_algorithm():
 
 	read_data()
-	a = generate_solution()
-	print(a)
-	print("main")
+	generate_population()
+	print( data )
+	fix_solutions()
+	print( data )
+
+if __name__ == "__main__":
+	NSGAII_algorithm()
+
