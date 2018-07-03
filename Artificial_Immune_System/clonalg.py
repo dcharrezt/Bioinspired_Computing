@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from bitstring import BitArray
-
+import copy
 
 generations = 10
 population_size = 4
@@ -57,7 +57,21 @@ def create_population():
 		data.append( sol )
 
 def clone_and_hypermutation():
-	print()
+	tmp = []
+	for i in range( population_size ):
+		for j range( n_clones ):
+			clone = copy.deepcopy( data[i] )
+			mutation_rate = mutation_factor * clone["a"]
+			for k in range len( clone["binary"] ):
+				rand = random.random()
+				if( rand < mutation_rate ):
+					if clone["binary"][k] == 0:
+						clone["binary"][k] = 1
+					else:
+						clone["binary"][k] = 0
+			clone["func"] = problem( clone["x"], clone["y"] )
+			tmp.append(clone)
+	return tmp
 
 def create_random_cells()
 	print()
