@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 
 n_objectives = 2
 n_iterations = 300
-population_size = 5
+population_size = 50
 offspring_size = 10
 
 crossover_prob = 0.75
 mutation_prob = 0.1
-
 
 path_dataset_cost = "datasets/small_cost.txt"
 path_dataset_delay = "datasets/small_delay.txt"
@@ -52,8 +51,8 @@ def generate_population():
 	for i in range( population_size ):
 		data.append( generate_solution() )
 
-def fix_solutions():
-	for sol in data:
+def fix_solutions( batch ):
+	for sol in batch:
 		something_fishy = True
 		while( something_fishy ):
 			something_fishy = False
@@ -69,21 +68,24 @@ def fix_solutions():
 
 						for j in range( solution_len-1 ):
 							if( sol["solution"][j]==-1 and 
-											sol["solution"][j+1]==1 ):
+											sol["solution"][j+1]==-1 ):
 								empty_cab_index = j+1
 
 						first_passenger_index = i-passenger_counter
-						# print(first_passenger_index)
+						# print("First, ", sol["solution"])
 						if( empty_cab_index < first_passenger_index ):
 							first_passenger_index -= 1
 						del sol["solution"][empty_cab_index]
 						sol["solution"].insert( first_passenger_index + rand, -1 )
-						# print(passenger_counter)
-						# print(sol)
 						passenger_counter = 0
 						i = solution_len
 				else:
 					passenger_counter += 1
+
+	for i in data:
+		if i["solution"].count(-1) > 10:
+			print("BUG DETECTED----------------")
+			print(i)
 
 def evaluate_population():
 	for i in data:
@@ -106,51 +108,36 @@ def fitness_delay( solu ):
 											[ solu["solution"][i+1] ]
 	return total_delay
 
-
-def PBX_crossover(individual_1, individual_2):
+def PBX_crossover( solution_1, solution_2 ):
 	offspring = []
-
-	mother_cromosome = individual_1["cm"]
-	father_cromosome = individual_2["cm"]
-
+	parent_1 = solution_1["solution"]
+	parent_2 = solution_2["solution"]
 	son_1, son_2 = [], []
-
-	mask = np.random.randint(2, size=len(mother_cromosome))
-
-	for i, j in zip(range(len(mother_cromosome)), mask):
-	
+	tmp_1, tmp_2 = [], []
+	mask = np.random.randint(2, size=len(parent_1))
+	for i, j in zip(range(len(parent_1)), mask):
 		if(j == 1):
-			son_1.append(father_cromosome[i])
-			son_2.append(mother_cromosome[i])
+			son_1.append(parent_2[i])
+			son_2.append(parent_1[i])
 		else:
-			son_1.append(-1)
-			son_2.append(-1)
+			son_1.append(-2)
+			son_2.append(-2)
 
-	# print(son_1)
-	# print(son_2)
+	for i in parent_1:
+		if (i not in son_1) or (son_1.count(-1) < n_passengers and i==-1):
+			son_1[son_1.index(-2)] = i
 
-	for i in mother_cromosome:
-		if (i not in son_1):
-			tmp = son_1.index(-1)
-			son_1[tmp] = i
+	for i in parent_2:
+		if (i not in son_2) or (son_2.count(-1) < n_passengers and i==-1):
+			son_2[son_2.index(-2)] = i
 
-	for i in father_cromosome:
-		if (i not in son_2):
-			tmp = son_2.index(-1)
-			son_2[tmp] = i
-
-	# print(*son_1, sep='')
-	# print(*son_2, sep='')
-
-	new_individual_1 = { "cm": son_1 }
-	new_individual_2 = { "cm": son_2 }
-
-	new_individual_1["f_distance"] = fitness_distance( new_individual_1 )
-	new_individual_2["f_distance"] = fitness_distance( new_individual_2 )
-
-	new_individual_1["f_cost"] = fitness_cost( new_individual_1 )
-	new_individual_2["f_cost"] = fitness_cost( new_individual_2 )
-
+	new_individual_1 = { "solution": son_1 }
+	new_individual_2 = { "solution": son_2 }
+	fix_solutions( [new_individual_1, new_individual_2] )
+	new_individual_1["cost"] = fitness_cost( new_individual_1 )
+	new_individual_2["delay"] = fitness_delay( new_individual_2 )
+	new_individual_1["cost"] = fitness_cost( new_individual_1 )
+	new_individual_2["delay"] = fitness_delay( new_individual_2 )
 	offspring.append(new_individual_1)
 	offspring.append(new_individual_2)
 
@@ -430,16 +417,11 @@ def minimize_F():
 def minimize_tsp():
 	global data
 	iteration = 0
-
 	generate_population_tsp()
 	evaluate_population_tsp()
-
 	while( iteration <= n_iterations ):
-
 		print("iteration #", iteration)
-
 		for i in range( offspring_size ):
-
 			# while(True):
 			m_individual = PBX_crossover( tournament_selection_tsp(), \
 										  tournament_selection_tsp() )
@@ -450,42 +432,47 @@ def minimize_tsp():
 				# if( valid_individual( m_individual[0] ) and \
 				# 		valid_individual( m_individual[1] ) ):
 				# 	break	
-
 			data.append( m_individual[0] )
 			data.append( m_individual[1] )
-
 		# print("data\t", len(data))
-
 		frontiers = non_dominated_sort_tsp()
 		distances = crowding_distance_tsp( frontiers )
-
 		new_data = crowded_selection_tsp( frontiers, distances )
 		data = []
 		data = copy.deepcopy( new_data )
-
 		print(frontiers)
-
 		iteration += 1
-
 		for i in data:
 			print("distance  ", i["f_distance"], "\tcost  ", i["f_cost"])
-
 	print(data)
 	plt.plot([ i["f_distance"] for i in data ], \
 				[i["f_cost"] for i in data], 'ro')
-	# plt.axis([0, 6, 0, 20])
 	plt.show()
 
 def NSGAII_algorithm():
-
+	global data
+	iteration = 0
 	read_data()
 	generate_population()
-	print( data )
-	fix_solutions()
-	print( data )
+
+
+	for i in data:
+		if i["solution"].count(-1) > 10:
+			print("BUG DETECTED ++++++++++++++++++++++++++")
+			print(i)
+
+	fix_solutions( data )
+
+
 	evaluate_population()
-	print( data )
+	# for i in range( n_iterations ):
+	# 	print("+++ Iteration ", i)
+	# 	for i in range( offspring_size ):
+	# 		print("", end='')
 
 if __name__ == "__main__":
 	NSGAII_algorithm()
+
+	# a = PBX_crossover( data[0], data[1] )
+	# print( a )
 
