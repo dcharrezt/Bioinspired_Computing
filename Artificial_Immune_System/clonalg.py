@@ -2,11 +2,11 @@ import random
 import numpy as np
 from bitstring import BitArray
 import copy
+import math
 
-generations = 10
+generations = 100
 population_size = 4
 selection_size = 4
-problem_size = 3
 n_random_cells = 2
 clone_rate = 0.5
 mutation_factor = -2.5
@@ -50,7 +50,7 @@ def affinity():
 	min_f = min( fs )
 
 	for i in data:
-		if max_f -  min_f == 0 :
+		if max_f - min_f == 0 :
 			i["a"] = 1
 		else:
 			i["a"] = 1-i["func"]/( max_f - min_f )
@@ -64,7 +64,7 @@ def clone_and_hypermutation():
 	for i in range( population_size ):
 		for j in range( n_clones ):
 			clone = copy.deepcopy( data[i] )
-			mutation_rate = mutation_factor * clone["a"]
+			mutation_rate = math.exp(mutation_factor * clone["a"])
 			for k in range (len( clone["binary"] )):
 				rand = random.random()
 				if( rand < mutation_rate ):
@@ -73,7 +73,7 @@ def clone_and_hypermutation():
 					else:
 						clone["binary"][k] = 0
 			clone["func"] = problem( clone["x"], clone["y"] )
-			tmp.append(clone)
+			tmp.append( copy.deepcopy(clone) )
 	return tmp
 
 def create_random_cells():
@@ -99,9 +99,13 @@ def clonalg():
 		data = []
 		for i in range( population_size ):
 			data.append( sorted_data[i] )
+			print(data[i])
 		sorted_data = []
 		if best_solution["func"] > data[0]["func"]:
 			best_solution = copy.deepcopy( data[0] )
 
+
 if __name__=="__main__":
 	clonalg()
+	print("++++++++++++++ Best solution ")
+	print( best_solution )
