@@ -10,7 +10,7 @@ problem_size = 3
 n_random_cells = 2
 clone_rate = 0.5
 mutation_factor = -2.5
-n_clones = population_size * clone_rate
+n_clones = int(population_size * clone_rate)
 
 min_x = -5
 max_x = 5
@@ -50,19 +50,22 @@ def affinity():
 	min_f = min( fs )
 
 	for i in data:
-		i["a"] = 1-a["func"]/( max_f - min_f )
+		if max_f -  min_f == 0 :
+			i["a"] = 1
+		else:
+			i["a"] = 1-i["func"]/( max_f - min_f )
 
 def create_population():
 	for i in range( population_size ):
-		data.append( sol )
+		data.append( create_solution() )
 
 def clone_and_hypermutation():
 	tmp = []
 	for i in range( population_size ):
-		for j range( n_clones ):
+		for j in range( n_clones ):
 			clone = copy.deepcopy( data[i] )
 			mutation_rate = mutation_factor * clone["a"]
-			for k in range len( clone["binary"] ):
+			for k in range (len( clone["binary"] )):
 				rand = random.random()
 				if( rand < mutation_rate ):
 					if clone["binary"][k] == 0:
@@ -73,22 +76,30 @@ def clone_and_hypermutation():
 			tmp.append(clone)
 	return tmp
 
-def create_random_cells()
-	print()
+def create_random_cells():
+	tmp = []
+	for i in range( n_random_cells ):
+		tmp.append( create_solution() )
+	return tmp
 
 def clonalg():
+	global data
 	iteration = 0
 
 	create_population()
-	for i in range( n_iterations ):
+	for i in range( generations ):
 		print("+++++++ iteration ", i)
 		affinity()
 		tmp = []
 		tmp = clone_and_hypermutation()
 		rnd_cells = create_random_cells()
+		data = data + tmp + rnd_cells
+		sorted_data = sorted(data, key=lambda k: k["func"] )
+		data = []
+		for i in range( population_size ):
+			data.append( sorted_data[i] )
+		sorted_data = []
+
 
 if __name__=="__main__":
-	print("Population")
-
-	x = create_solution()
-	print( x )
+	clonalg()
