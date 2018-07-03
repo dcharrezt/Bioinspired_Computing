@@ -11,6 +11,8 @@ offspring_size = 10
 crossover_prob = 0.75
 mutation_prob = 0.1
 
+n_adversaries = 2 	# for tournament selection
+
 path_dataset_cost = "datasets/small_cost.txt"
 path_dataset_delay = "datasets/small_delay.txt"
 
@@ -151,7 +153,7 @@ def mutation_tsp( individual_1 ):
 def tournament_selection_tsp():
 	adversaries = np.random.permutation( list( range( population_size ) ) )
 	tmp = [ data[i] for i in adversaries[:n_adversaries]]
-	sums = [ i["f_distance"]+i["f_cost"] for i in tmp ]
+	sums = [ i["cost"]+i["delay"] for i in tmp ]
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
 
@@ -465,10 +467,10 @@ def NSGAII_algorithm():
 
 
 	evaluate_population()
-	# for i in range( n_iterations ):
-	# 	print("+++ Iteration ", i)
-	# 	for i in range( offspring_size ):
-	# 		print("", end='')
+	for i in range( n_iterations ):
+		print("+++ Iteration ", i)
+		for i in range( offspring_size ):
+			offspring = PBX_crossover()
 
 if __name__ == "__main__":
 	NSGAII_algorithm()
