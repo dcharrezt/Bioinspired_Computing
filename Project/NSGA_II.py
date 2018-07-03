@@ -145,22 +145,15 @@ def PBX_crossover( solution_1, solution_2 ):
 
 	return offspring
 
-def mutation_tsp( individual_1 ):
-	perm_tmp = list(np.random.permutation( n_cities ))
-	individual_1["cm"][perm_tmp[1]], individual_1["cm"][perm_tmp[0]] = \
-	 	individual_1["cm"][perm_tmp[0]], individual_1["cm"][perm_tmp[1]]
-
-def tournament_selection_tsp():
-	adversaries = np.random.permutation( list( range( population_size ) ) )
-	tmp = [ data[i] for i in adversaries[:n_adversaries]]
-	sums = [ i["cost"]+i["delay"] for i in tmp ]
-	m_min = min( sums )
-	return data[adversaries[sums.index(m_min)]] 
+def mutation( solution ):
+	perm_tmp = list(np.random.permutation( n_passengers*2 ))
+	solution["solution"][perm_tmp[1]], solution["solution"][perm_tmp[0]] = \
+	 	solution["solution"][perm_tmp[0]], solution["solution"][perm_tmp[1]]
 
 def tournament_selection():
 	adversaries = np.random.permutation( list( range( population_size ) ) )
 	tmp = [ data[i] for i in adversaries[:n_adversaries]]
-	sums = [ i["fitness_1"]+i["fitness_2"] for i in tmp ]
+	sums = [ i["cost"]+i["delay"] for i in tmp ]
 	m_min = min( sums )
 	return data[adversaries[sums.index(m_min)]] 
 
@@ -456,21 +449,19 @@ def NSGAII_algorithm():
 	iteration = 0
 	read_data()
 	generate_population()
-
-
-	for i in data:
-		if i["solution"].count(-1) > 10:
-			print("BUG DETECTED ++++++++++++++++++++++++++")
-			print(i)
-
 	fix_solutions( data )
-
-
 	evaluate_population()
 	for i in range( n_iterations ):
 		print("+++ Iteration ", i)
 		for i in range( offspring_size ):
-			offspring = PBX_crossover()
+			offspring = PBX_crossover( tournament_selection(),tournament_selection())
+			if( random.random() <= mutation_prob ):
+				mutation( offspring[0] )
+			if( random.random() <= mutation_prob ):
+				mutation( offspring[1] )
+			data.append( offspring[0] )
+			data.append( offspring[1] )
+
 
 if __name__ == "__main__":
 	NSGAII_algorithm()
