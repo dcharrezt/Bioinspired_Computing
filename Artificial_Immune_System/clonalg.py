@@ -19,7 +19,7 @@ min_y = -5
 max_y = 5
 
 data = []
-best_solution = {}
+best_solution = {"func": np.inf}
 
 def problem( x, y ):
 	return x**2 + y**2
@@ -84,6 +84,7 @@ def create_random_cells():
 
 def clonalg():
 	global data
+	global best_solution
 	iteration = 0
 
 	create_population()
@@ -99,7 +100,8 @@ def clonalg():
 		for i in range( population_size ):
 			data.append( sorted_data[i] )
 		sorted_data = []
-
+		if best_solution["func"] > data[0]["func"]:
+			best_solution = copy.deepcopy( data[0] )
 
 if __name__=="__main__":
 	clonalg()
