@@ -4,17 +4,17 @@ import copy
 import matplotlib.pyplot as plt
 
 n_objectives = 2
-n_iterations = 300
-population_size = 50
-offspring_size = 10
+n_iterations = 200
+population_size = 100
+offspring_size = 50
 
 crossover_prob = 0.75
 mutation_prob = 0.1
 
-n_adversaries = 2 	# for tournament selection
+n_adversaries = 8 	# for tournament selection
 
-path_dataset_cost = "datasets/small_cost.txt"
-path_dataset_delay = "datasets/small_delay.txt"
+path_dataset_cost = "datasets/big_cost.txt"
+path_dataset_delay = "datasets/big_delay.txt"
 
 data = []
 cost_matrix = []
@@ -38,12 +38,12 @@ def read_data():
 		for line in f:
 			delay_matrix.append( list( [float(n) for n in line.split()] ) )
 
-	n_cabs = len( cost_matrix )
-	n_passengers = len( cost_matrix )
+	n_cabs = len( cost_matrix ) -1
+	n_passengers = len( cost_matrix ) -1
 	solution_len = n_cabs + n_passengers
 
 def generate_solution():
-	sol = list( range(0, n_passengers) )
+	sol = list( range(1, n_passengers+1) )
 	cabs = [-1] * n_cabs
 	sol += cabs
 	random.shuffle( sol )
@@ -51,7 +51,7 @@ def generate_solution():
 
 def generate_population():
 	for i in range( population_size ):
-		data.append( generate_solution() )
+		data.append( copy.deepcopy(generate_solution()) )
 
 def fix_solutions( batch ):
 	for sol in batch:
@@ -84,30 +84,47 @@ def fix_solutions( batch ):
 				else:
 					passenger_counter += 1
 
-	for i in data:
-		if i["solution"].count(-1) > 10:
-			print("BUG DETECTED----------------")
-			print(i)
+def evaluate_population( batch ):
+	for i in batch:
+		pc = get_passengers_by_cab( i )
+		i["cost"] = fitness_cost( pc )
+		i["delay"] = fitness_delay( pc )
 
-def evaluate_population():
-	for i in data:
-		i["cost"] = fitness_cost( i )
-		i["delay"] = fitness_delay( i )
-
-def fitness_cost( solu ):
+def get_passengers_by_cab( solution ):
+	pass_by_cab = []
+	tmp = []
+	for i in range( len(solution["solution"]) ):
+		if solution["solution"][i] != -1:
+			tmp.append( solution["solution"][i] )
+		if solution["solution"][i] == -1:
+			pass_by_cab.append( tmp )
+			tmp = []
+	pass_by_cab.append(tmp)
+	pass_by_cab = [x for x in pass_by_cab if x != []]
+	return pass_by_cab
+ 
+def fitness_cost( pc ):
 	total_cost = 0
-	for i in range( solution_len -1 ):
-		if solu["solution"][i] != -1 and solu["solution"][i+1] != -1:
-			total_cost += cost_matrix[ solu["solution"][i] ] \
-											[ solu["solution"][i+1] ]
+	for i in pc:
+		if len(i) == 1:
+			total_cost+= cost_matrix[0][i[0]]
+		else:
+			for j in range(len(i)-1):
+				if j == 0:
+					total_cost += cost_matrix[0][i[j]]
+				total_cost += cost_matrix[i[j]][i[j+1]]
 	return total_cost
 
-def fitness_delay( solu ):
+def fitness_delay( pc ):
 	total_delay = 0
-	for i in range( solution_len -1 ):
-		if solu["solution"][i] != -1 and solu["solution"][i+1] != -1:
-			total_delay += delay_matrix[ solu["solution"][i] ] \
-											[ solu["solution"][i+1] ]
+	for i in pc:
+		if len(i) == 1:
+			total_delay+= delay_matrix[0][i[0]]
+		else:
+			for j in range(len(i)-1):
+				if j == 0:
+					total_delay += delay_matrix[0][i[j]]
+				total_delay += delay_matrix[i[j]][i[j+1]]
 	return total_delay
 
 def PBX_crossover( solution_1, solution_2 ):
@@ -136,12 +153,14 @@ def PBX_crossover( solution_1, solution_2 ):
 	new_individual_1 = { "solution": son_1 }
 	new_individual_2 = { "solution": son_2 }
 	fix_solutions( [new_individual_1, new_individual_2] )
-	new_individual_1["cost"] = fitness_cost( new_individual_1 )
-	new_individual_2["delay"] = fitness_delay( new_individual_2 )
-	new_individual_1["cost"] = fitness_cost( new_individual_1 )
-	new_individual_2["delay"] = fitness_delay( new_individual_2 )
-	offspring.append(new_individual_1)
-	offspring.append(new_individual_2)
+	pc_1 = get_passengers_by_cab( new_individual_1 )
+	pc_2 = get_passengers_by_cab( new_individual_2 )
+	new_individual_1["cost"] = fitness_cost( pc_1 )
+	new_individual_1["delay"] = fitness_delay( pc_1 )
+	new_individual_2["cost"] = fitness_cost( pc_2 )
+	new_individual_2["delay"] = fitness_delay( pc_2 )
+	offspring.append( copy.deepcopy(new_individual_1) )
+	offspring.append( copy.deepcopy(new_individual_2) )
 
 	return offspring
 
@@ -155,41 +174,17 @@ def tournament_selection():
 	tmp = [ data[i] for i in adversaries[:n_adversaries]]
 	sums = [ i["cost"]+i["delay"] for i in tmp ]
 	m_min = min( sums )
-	return data[adversaries[sums.index(m_min)]] 
+	return copy.deepcopy(data[adversaries[sums.index(m_min)]]) 
 
-def uniform_mutation( individual ):
-	if( random.randint(0, 1) ):
-		individual["x"] = random.uniform(x_lower_limit, x_upper_limit)
-	else:
-		individual["y"] = random.uniform(y_lower_limit, y_upper_limit)
-	individual["fitness_1"] = function_1( individual["x"], individual["y"] )
-	individual["fitness_2"] = function_2( individual["x"], individual["y"] )
-
-def valid_individual( individual ):
-	if( x_lower_limit <= individual["x"] <= x_upper_limit and \
-		y_lower_limit <= individual["y"] <= y_upper_limit ):
+def dominance( solution_1, solution_2 ):
+	if( ( solution_1["cost"] < solution_2["cost"] and \
+		  solution_1["delay"] < solution_2["delay"] ) or \
+		( solution_1["cost"] <= solution_2["cost"] and \
+		  solution_1["delay"] < solution_2["delay"] ) or \
+		( solution_1["cost"] < solution_2["cost"] and \
+		  solution_1["delay"] <= solution_2["delay"] ) ):
 		return True
-	return False
-
-def dominate( individual_1, individual_2 ):
-		if( ( individual_1["fitness_1"] < individual_2["fitness_1"] and \
-			  individual_1["fitness_2"] < individual_2["fitness_2"] ) or \
-			( individual_1["fitness_1"] <= individual_2["fitness_1"] and \
-			  individual_1["fitness_2"] < individual_2["fitness_2"] ) or \
-			( individual_1["fitness_1"] < individual_2["fitness_1"] and \
-			  individual_1["fitness_2"] <= individual_2["fitness_2"] ) ):
-			return True
-		return False 
-
-def dominate_tsp( individual_1, individual_2 ):
-		if( ( individual_1["f_distance"] < individual_2["f_distance"] and \
-			  individual_1["f_cost"] < individual_2["f_cost"] ) or \
-			( individual_1["f_distance"] <= individual_2["f_distance"] and \
-			  individual_1["f_cost"] < individual_2["f_cost"] ) or \
-			( individual_1["f_distance"] < individual_2["f_distance"] and \
-			  individual_1["f_cost"] <= individual_2["f_cost"] ) ):
-			return True
-		return False 
+	return False 
 
 def non_dominated_sort():
 	S = []
@@ -204,44 +199,9 @@ def non_dominated_sort():
 
 	for p in  range(len( data )) :
 		for q in range(len( data )):
-			if( dominate(data[p], data[q]) ):
+			if( dominance(data[p], data[q]) ):
 				S[p].append(q)
-			elif( dominate( data[q], data[p]) ):
-				N[p] += 1
-		if(N[p] == 0):
-			rank[p] = 0
-			frontiers[0].append(p)
-	i = 0
-	while( frontiers[i] != [] ):
-		Q = []
-		for p in frontiers[i]:
-			for q in S[p]:
-				N[q] -= 1
-				if( N[q] == 0 ):
-					rank[q] = i+1
-					Q.append(q)
-		i += 1
-		frontiers.append( Q )
-	print(frontiers)
-	del frontiers[len(frontiers)-1]
-	return frontiers
-
-def non_dominated_sort_tsp():
-	S = []
-	N = []
-	rank = []
-	frontiers = [[]]
-	
-	for i in range( len( data ) ):
-		S.append([])
-		N.append( 0 )
-		rank.append( 0 )
-
-	for p in  range(len( data )) :
-		for q in range(len( data )):
-			if( dominate_tsp(data[p], data[q]) ):
-				S[p].append(q)
-			elif( dominate_tsp( data[q], data[p]) ):
+			elif( dominance( data[q], data[p]) ):
 				N[p] += 1
 		if(N[p] == 0):
 			rank[p] = 0
@@ -265,37 +225,10 @@ def crowding_distance( frontiers ):
 	for f in frontiers:
 		distance = [ 0. ] * len(f)
 		for m in range( n_objectives ):
-			m_sorted = [ [i, data[i]["fitness_"+str(m+1)]] for i in f ]
-			m_sorted = sorted( m_sorted, key=lambda x: x[1] )
-			if( len(m_sorted) > 1):
-				distance[0] = np.inf
-				distance[ len(f)-1 ] = np.inf
-
-				if( len(m_sorted) > 2):
-					m_max = max(m_sorted, key=lambda item: item[1])[1]
-					m_min = min(m_sorted, key=lambda item: item[1])[1]
-					if( m_max - m_min == 0):
-						divisor = 10e-5
-					else:
-						divisor = m_max - m_min
-					for k in range(1, len(f)-1 ):
-						distance[k] += (m_sorted[k+1][1] - m_sorted[k-1][1]) / \
-									   (divisor)
-			else:
-				distance[0] = 0
-		for i in range( len(f) ):
-			distances[f[i]] = distance[i]
-	return distances
-
-def crowding_distance_tsp( frontiers ):
-	distances = dict()
-	for f in frontiers:
-		distance = [ 0. ] * len(f)
-		for m in range( n_objectives ):
 			if( m == 0):
-				m_sorted = [ [i, data[i]["f_distance"]] for i in f ]
+				m_sorted = [ [i, data[i]["cost"]] for i in f ]
 			elif( m == 1): 
-				m_sorted = [ [i, data[i]["f_cost"]] for i in f ]
+				m_sorted = [ [i, data[i]["delay"]] for i in f ]
 			m_sorted = sorted( m_sorted, key=lambda x: x[1] )
 			if( len(m_sorted) > 1):
 				distance[0] = np.inf
@@ -334,10 +267,10 @@ def crowded_tournament_selection(frontiers, distances):
 		rand_2 = perm_tmp[1]
 		# print( rand_1 )
 		# print( rand_2 )
-		if( front[rand_1] > front[rand_2] ):
+		if( front[rand_1] < front[rand_2] ):
 			new_data.append( data[rand_1] )
 			tmp.remove(rand_1)
-		elif( front[rand_1] < front[rand_2] ):
+		elif( front[rand_1] > front[rand_2] ):
 			new_data.append( data[rand_2] )
 			tmp.remove(rand_2) 
 		elif( front[rand_1] == front[rand_2] ):
@@ -350,99 +283,18 @@ def crowded_tournament_selection(frontiers, distances):
 
 	return new_data
 
-def crowded_selection_tsp( frontiers, distances):
+def crowded_selection_tsp( frontiers):
 	global data
 	new_data = []
 	
 	while( True ):
 		for i in frontiers:
 			for j in i:
-				new_data.append( data[j] )
+				new_data.append( copy.deepcopy(data[j]) )
 				# print(len(new_data))
 				if( len(new_data) >= population_size ):
 					# print("asd")
 					return new_data
-
-def minimize_F():
-	global data
-	iteration = 0
-
-	generate_population()
-	evaluate_population()
-
-	while( iteration <= n_iterations ):
-
-		print("iteration #", iteration)
-
-		for i in range(offspring_size):
-
-			while(True):
-				m_individual = BLX_crossover( tournament_selection(), \
-											  tournament_selection() )
-				if( random.random() <= mutation_prob ):
-					uniform_mutation( m_individual )
-				if( valid_individual( m_individual ) ):
-					break	
-
-			data.append( m_individual )
-			data.append( m_individual )
-
-		print("data\t", len(data))
-
-		frontiers = non_dominated_sort()
-		distances = crowding_distance( frontiers )
-
-		# new_data = crowded_tournament_selection( frontiers, distances )
-		new_data = crowded_selection_tsp( frontiers, distances )
-		data = []
-		data = copy.deepcopy( new_data )
-
-
-		iteration += 1
-
-		for i in data:
-			print("fitness_1  ", i["fitness_1"], "\tfitness_2  ", i["fitness_2"])
-
-	print(data)
-	plt.plot([ i["fitness_1"] for i in data ], \
-				[i["fitness_2"] for i in data], 'ro')
-	# plt.axis([0, 6, 0, 20])
-	plt.show()
-
-def minimize_tsp():
-	global data
-	iteration = 0
-	generate_population_tsp()
-	evaluate_population_tsp()
-	while( iteration <= n_iterations ):
-		print("iteration #", iteration)
-		for i in range( offspring_size ):
-			# while(True):
-			m_individual = PBX_crossover( tournament_selection_tsp(), \
-										  tournament_selection_tsp() )
-			if( random.random() <= mutation_prob ):
-				mutation_tsp( m_individual[0] )
-			if( random.random() <= mutation_prob ):
-				mutation_tsp( m_individual[1] )
-				# if( valid_individual( m_individual[0] ) and \
-				# 		valid_individual( m_individual[1] ) ):
-				# 	break	
-			data.append( m_individual[0] )
-			data.append( m_individual[1] )
-		# print("data\t", len(data))
-		frontiers = non_dominated_sort_tsp()
-		distances = crowding_distance_tsp( frontiers )
-		new_data = crowded_selection_tsp( frontiers, distances )
-		data = []
-		data = copy.deepcopy( new_data )
-		print(frontiers)
-		iteration += 1
-		for i in data:
-			print("distance  ", i["f_distance"], "\tcost  ", i["f_cost"])
-	print(data)
-	plt.plot([ i["f_distance"] for i in data ], \
-				[i["f_cost"] for i in data], 'ro')
-	plt.show()
 
 def NSGAII_algorithm():
 	global data
@@ -450,22 +302,45 @@ def NSGAII_algorithm():
 	read_data()
 	generate_population()
 	fix_solutions( data )
-	evaluate_population()
+	evaluate_population( data )
+
 	for i in range( n_iterations ):
 		print("+++ Iteration ", i)
 		for i in range( offspring_size ):
-			offspring = PBX_crossover( tournament_selection(),tournament_selection())
+			offspring = PBX_crossover(tournament_selection(),tournament_selection())
 			if( random.random() <= mutation_prob ):
 				mutation( offspring[0] )
 			if( random.random() <= mutation_prob ):
 				mutation( offspring[1] )
-			data.append( offspring[0] )
-			data.append( offspring[1] )
+			fix_solutions( offspring )
+			evaluate_population( offspring )
+			data.append( copy.deepcopy(offspring[0]) )
+			data.append( copy.deepcopy(offspring[1]) )
+		print(len(data))
+		frontiers = non_dominated_sort()
+		# distances = crowding_distance( frontiers )
+		# new_data = crowded_tournament_selection( frontiers, distances )
+		new_data = []
+		new_data = crowded_selection_tsp( frontiers )
+		# for i in frontiers[0]:
+		# 	new_data.append( data[i] )
+		data = []
+		data = copy.deepcopy( new_data )
+		print(frontiers)
+		for i in data:
+			print("cost  ", i["cost"], "\t delay  ", i["delay"])
+	print(data)
 
 
 if __name__ == "__main__":
 	NSGAII_algorithm()
+	frontiers = non_dominated_sort()
 
-	# a = PBX_crossover( data[0], data[1] )
-	# print( a )
+	pareto = []
+	for i in frontiers[0]:
+		pareto.append( data[i] )
+	plt.plot([ i["cost"] for i in pareto ], \
+				[i["delay"] for i in pareto], 'ro')
+	plt.show()
+
 
