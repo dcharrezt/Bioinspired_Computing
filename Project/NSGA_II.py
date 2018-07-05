@@ -88,8 +88,6 @@ def corrective_function( batch):
 def crossover_PBX( solution_1, solution_2 ):
 	solution_len = 9
 	parents = [ solution_1["solution"][:], solution_2["solution"][:]]
-	print(parents[0])
-	print(parents[1])
 	offspring= [[],[]]
 	for i in range(2):
 		offspring[i] = [-1]*solution_len
@@ -97,7 +95,6 @@ def crossover_PBX( solution_1, solution_2 ):
 		for j in range( solution_len ):
 			if mask[j] == 1:
 				offspring[i][j] = parents[i][j]
-		print(mask)
 		if i == 0:
 			cp_parent = parents[1][:]
 			for j in range(solution_len):
@@ -115,7 +112,6 @@ def crossover_PBX( solution_1, solution_2 ):
 				if cp_parent[j] != -1:
 					offspring[i][offspring[1].index(-1)] = cp_parent[j]
 	return offspring
-
 
 def generate_population():
 	for i in range( population_size ):
@@ -233,9 +229,12 @@ def PBX_crossover( solution_1, solution_2 ):
 	return offspring
 
 def mutation( solution ):
-	perm_tmp = list(np.random.permutation( n_passengers*2 ))
-	solution["solution"][perm_tmp[1]], solution["solution"][perm_tmp[0]] = \
-	 	solution["solution"][perm_tmp[0]], solution["solution"][perm_tmp[1]]
+	rand_1 = random.randint(0, solution_len-1)
+	rand_2 = random.randint(0, solution_len-1)
+	while rand_1 == rand_2:
+		rand_2 = random.randint(0, solution_len-1)
+	solution["solution"][rand_1], solution["solution"][rand_2] = \
+	 	solution["solution"][rand_2], solution["solution"][rand_1]
 
 def tournament_selection():
 	adversaries = np.random.permutation( list( range( population_size ) ) )
