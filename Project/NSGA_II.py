@@ -62,6 +62,29 @@ def generate_avid_solution( avid_solution ):
 		tmp[rand_1], tmp[rand_2] = tmp[rand_2], tmp[rand_1]
 		data.append({"solution":avid_solution,"cost":np.inf,"delay":np.inf})
 
+def find_consecutives_zeros( sol ):
+	for i in range(solution_len-1):
+		if sol[i] == 0 and sol[i+1] == 0:
+			return i
+
+def corrective_function():
+	for sol in data:
+		while(True):
+			seq_size = 0
+			position = 0
+			while((seq_size<=max_cab_capacity) and (position<solution_len)):
+				if sol[position]!=0:
+					seq_size+=1
+				else:
+					seq_size = 0
+				position+=1
+			if seq_size>max_cab_capacity:
+				rand = random.randint(position-max_cab_capacity+1,position-1)
+				index_zero = find_consecutives_zeros( sol )
+				sol[index_zero], sol[rand] = sol[rand], sol[index_zero]
+			else:
+				break
+
 def generate_population():
 	for i in range( population_size ):
 		data.append( copy.deepcopy(generate_solution()) )
