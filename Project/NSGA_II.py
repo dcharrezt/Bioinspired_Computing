@@ -49,6 +49,19 @@ def generate_solution():
 	random.shuffle( sol )
 	return { "solution": sol, "cost": np.inf, "delay": np.inf }
 
+def generate_avid_solution( avid_solution ):
+	data.append({"solution":avid_solution,"cost":np.inf,"delay":np.inf})
+	for i in range( 1, population_size ):
+		tmp = list(avid_solution)
+		n_modifications = random.randint( 1, solution_len/4 )
+		for j in range( n_modifications ):
+			rand_1 = random.randint( 1 , solution_len )
+			rand_2 = random.randint( 1 , solution_len )
+			while( rand_1 == rand_2 ):
+				rand_2 = random.randint( 1, solution_len )
+		tmp[rand_1], tmp[rand_2] = tmp[rand_2], tmp[rand_1]
+		data.append({"solution":avid_solution,"cost":np.inf,"delay":np.inf})
+
 def generate_population():
 	for i in range( population_size ):
 		data.append( copy.deepcopy(generate_solution()) )
