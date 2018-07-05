@@ -4,7 +4,7 @@ import copy
 import matplotlib.pyplot as plt
 
 n_objectives = 2
-n_iterations = 200
+n_iterations = 20
 population_size = 100
 offspring_size = 50
 
@@ -13,8 +13,8 @@ mutation_prob = 0.1
 
 n_adversaries = 8 	# for tournament selection
 
-path_dataset_cost = "datasets/big_cost.txt"
-path_dataset_delay = "datasets/big_delay.txt"
+path_dataset_cost = "datasets/small_cost.txt"
+path_dataset_delay = "datasets/small_delay.txt"
 
 data = []
 cost_matrix = []
@@ -67,8 +67,8 @@ def find_consecutives_zeros( sol ):
 		if sol[i] == 0 and sol[i+1] == 0:
 			return i
 
-def corrective_function():
-	for sol in data:
+def corrective_function( batch):
+	for sol in batch:
 		while(True):
 			seq_size = 0
 			position = 0
@@ -84,6 +84,38 @@ def corrective_function():
 				sol[index_zero], sol[rand] = sol[rand], sol[index_zero]
 			else:
 				break
+
+def crossover_PBX( solution_1, solution_2 ):
+	solution_len = 9
+	parents = [ solution_1["solution"][:], solution_2["solution"][:]]
+	print(parents[0])
+	print(parents[1])
+	offspring= [[],[]]
+	for i in range(2):
+		offspring[i] = [-1]*solution_len
+		mask = np.random.randint(2, size=solution_len)
+		for j in range( solution_len ):
+			if mask[j] == 1:
+				offspring[i][j] = parents[i][j]
+		print(mask)
+		if i == 0:
+			cp_parent = parents[1][:]
+			for j in range(solution_len):
+				if mask[j] == 1:
+					cp_parent[cp_parent.index(parents[0][j])] = -1
+			for j in range(solution_len):
+				if cp_parent[j] != -1:
+					offspring[i][offspring[0].index(-1)] = cp_parent[j]
+		else:
+			cp_parent = parents[0][:]
+			for j in range(solution_len):
+				if mask[j] == 1:
+					cp_parent[cp_parent.index(parents[1][j])] = -1
+			for j in range(solution_len):
+				if cp_parent[j] != -1:
+					offspring[i][offspring[1].index(-1)] = cp_parent[j]
+	return offspring
+
 
 def generate_population():
 	for i in range( population_size ):
@@ -369,14 +401,17 @@ def NSGAII_algorithm():
 
 
 if __name__ == "__main__":
-	NSGAII_algorithm()
-	frontiers = non_dominated_sort()
+	a = crossover_PBX( {"solution":[2,0,1,5,4,0,0,3,0]},
+							{"solution":[0,3,1,0,2,0,4,0,5]})
+	print(a)
+	# NSGAII_algorithm()
+	# frontiers = non_dominated_sort()
 
-	pareto = []
-	for i in frontiers[0]:
-		pareto.append( data[i] )
-	plt.plot([ i["cost"] for i in pareto ], \
-				[i["delay"] for i in pareto], 'ro')
-	plt.show()
+	# pareto = []
+	# for i in frontiers[0]:
+	# 	pareto.append( data[i] )
+	# plt.plot([ i["cost"] for i in pareto ], \
+	# 			[i["delay"] for i in pareto], 'ro')
+	# plt.show()
 
 
