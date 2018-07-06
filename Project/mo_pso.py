@@ -15,8 +15,8 @@ n_cabs = 0
 n_passengers = 0
 solution_len = 0
 
-n_iterations = 10	
-n_particles = 5
+n_iterations = 20	
+n_particles = 10
 n_dimesions = 2
 max_cab_capacity = 4
 
@@ -239,7 +239,6 @@ def mo_pso():
 	fix_solutions( data )
 	for i in range( n_iterations ):
 		print( "+++++ Iteration ", i )
-		print("zzzz")
 		for i in range( len(data) ):
 			pLocal = best_local_particle( copy.deepcopy(data[i]) )
 			pGlocal = copy.deepcopy(best_global_particle())
@@ -248,30 +247,25 @@ def mo_pso():
 			SS = list(a + b)
 			updating_position(data[i], SS)
 			fix_solutions( [data[i]] )
-		print("aaa ")
 		evaluate_swarm()
-		print("bbb ")
 		new_swarm = data + global_repository
 		pareto_front = non_dominated_sort( new_swarm )
-		print("ccc ")
-		print("len ", len(new_swarm))
+		# print("len ", len(new_swarm))
 		update_global_repository( pareto_front[0], new_swarm )
-		print("ddd ")
 		update_local_repository()
-		print("eee ")
-		print(len(data))
-		print(len(global_repository))
+	# print(len(data))
+	# print(len(global_repository))
 
 if __name__=="__main__":
 	mo_pso()
 
 	print("GLObal")
-	for m in global_repository:
+	for m in data:
 		print(m.solution)
 		print(m.cost)
 		print(m.delay)
 	print()
 
-	plt.plot([ i.cost for i in global_repository ], \
-				[i.delay for i in global_repository], 'ro')
-	plt.show()
+	# plt.plot([ i.cost for i in global_repository ], \
+	# 			[i.delay for i in global_repository], 'ro')
+	# plt.show()

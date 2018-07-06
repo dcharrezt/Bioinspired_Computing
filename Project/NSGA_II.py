@@ -5,16 +5,33 @@ import matplotlib.pyplot as plt
 
 n_objectives = 2
 n_iterations = 20
-population_size = 100
-offspring_size = 50
+population_size = 5
+offspring_size = 3
 
 crossover_prob = 0.75
 mutation_prob = 0.1
 
-n_adversaries = 8 	# for tournament selection
+n_adversaries = 3 	# for tournament selection
+
+# For small dataset
+avid_cost = [1, 3, 2, 7, 6, 8, 4, 5, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0]
+avid_delay = [6, 3, 4, 5, 7, 0, 9, 8, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0]
 
 path_dataset_cost = "datasets/small_cost.txt"
 path_dataset_delay = "datasets/small_delay.txt"
+
+# For large dataset
+# avid_cost = [9,7,3,2,5,34,35,18,31,0,14,37,36,20,21,19,1,4,38,0,25,26,40,10, \
+# 			39,6,8,13,16,0,30,12,32,33,17,44,29,11,27,0,28,22,41,15,42,43,23,24, \
+# 			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, \
+# 			0,0,0,0,0,0,0]
+# avid_delay = [1,39,0,2,0,5,3,4,0,7,32,0,8,0,9,0,10,0,11,0,12,0,13,0,14,0,15,0, \
+# 			16,0,17,0,18,26,0,19,0,20,37,0,21,0,22,0,23,0,24,25,0,27,0,28,29,0, \
+# 			30,0,31,34,0,33,0,35,6,0,36,0,38,0,40,0,41,42,43,0,44,0,0,0,0,0,0,0, \
+# 			0,0,0,0,0,0,0,0]
+
+# path_dataset_cost = "datasets/large_cost.txt"
+# path_dataset_delay = "datasets/large_delay.txt"
 
 data = []
 cost_matrix = []
@@ -29,7 +46,6 @@ def read_data():
 	global n_cabs
 	global n_passengers
 	global solution_len
-
 	with open(path_dataset_cost, 'r') as f:
 		for line in f:
 			cost_matrix.append( list( [float(n) for n in line.split()] ) )
@@ -41,6 +57,7 @@ def read_data():
 	n_cabs = len( cost_matrix ) -1
 	n_passengers = len( cost_matrix ) -1
 	solution_len = n_cabs + n_passengers
+	print("SOL ", solution_len)
 
 def generate_solution():
 	sol = list( range(1, n_passengers+1) )
@@ -49,22 +66,35 @@ def generate_solution():
 	random.shuffle( sol )
 	return { "solution": sol, "cost": np.inf, "delay": np.inf }
 
-def generate_avid_solution( avid_solution ):
-	data.append({"solution":avid_solution,"cost":np.inf,"delay":np.inf})
-	for i in range( 1, population_size ):
-		tmp = list(avid_solution)
-		n_modifications = random.randint( 1, solution_len/4 )
-		for j in range( n_modifications ):
-			rand_1 = random.randint( 1 , solution_len )
-			rand_2 = random.randint( 1 , solution_len )
-			while( rand_1 == rand_2 ):
-				rand_2 = random.randint( 1, solution_len )
-		tmp[rand_1], tmp[rand_2] = tmp[rand_2], tmp[rand_1]
-		data.append({"solution":avid_solution,"cost":np.inf,"delay":np.inf})
+def generate_avid_solution():
+	global avid_cost, avid_delay
+	data.append({"solution":avid_cost,"cost":np.inf,"delay":np.inf})
+	data.append({"solution":avid_delay,"cost":np.inf,"delay":np.inf})
+	for i in range( 2, population_size ):
+		if i < population_size/2:
+			tmp = list(avid_cost)
+			n_modifications = random.randint( 1, int(solution_len/4) )
+			for j in range( n_modifications ):
+				rand_1 = random.randint( 1 , solution_len-1 )
+				rand_2 = random.randint( 1 , solution_len-1 )
+				while( rand_1 == rand_2 ):
+					rand_2 = random.randint( 1, solution_len-1 )
+				tmp[rand_1], tmp[rand_2] = tmp[rand_2], tmp[rand_1]
+			data.append({"solution":tmp,"cost":np.inf,"delay":np.inf})
+		else:
+			tmp = list(avid_delay)
+			n_modifications = random.randint( 1, int(solution_len/4) )
+			for j in range( n_modifications ):
+				rand_1 = random.randint( 1 , solution_len-1 )
+				rand_2 = random.randint( 1 , solution_len-1 )
+				while( rand_1 == rand_2 ):
+					rand_2 = random.randint( 1, solution_len-1 )
+				tmp[rand_1], tmp[rand_2] = tmp[rand_2], tmp[rand_1]
+			data.append({"solution":tmp,"cost":np.inf,"delay":np.inf})
 
 def find_consecutives_zeros( sol ):
 	for i in range(solution_len-1):
-		if sol[i] == 0 and sol[i+1] == 0:
+		if sol["solution"][i] == 0 and sol["solution"][i+1] == 0:
 			return i
 
 def corrective_function( batch):
@@ -73,7 +103,7 @@ def corrective_function( batch):
 			seq_size = 0
 			position = 0
 			while((seq_size<=max_cab_capacity) and (position<solution_len)):
-				if sol[position]!=0:
+				if sol["solution"][position]!=0:
 					seq_size+=1
 				else:
 					seq_size = 0
@@ -81,12 +111,12 @@ def corrective_function( batch):
 			if seq_size>max_cab_capacity:
 				rand = random.randint(position-max_cab_capacity+1,position-1)
 				index_zero = find_consecutives_zeros( sol )
-				sol[index_zero], sol[rand] = sol[rand], sol[index_zero]
+				sol["solution"][index_zero], sol["solution"][rand] = \
+					sol["solution"][rand], sol["solution"][index_zero]
 			else:
 				break
 
 def crossover_PBX( solution_1, solution_2 ):
-	solution_len = 9
 	parents = [ solution_1["solution"][:], solution_2["solution"][:]]
 	offspring= [[],[]]
 	for i in range(2):
@@ -111,7 +141,8 @@ def crossover_PBX( solution_1, solution_2 ):
 			for j in range(solution_len):
 				if cp_parent[j] != -1:
 					offspring[i][offspring[1].index(-1)] = cp_parent[j]
-	return offspring
+	return [{"solution":offspring[0], "cost":np.inf, "delay":np.inf}, \
+					{"solution":offspring[1], "cost":np.inf, "delay":np.inf}]
 
 def generate_population():
 	for i in range( population_size ):
@@ -335,17 +366,17 @@ def crowded_tournament_selection(frontiers, distances):
 		# print( rand_1 )
 		# print( rand_2 )
 		if( front[rand_1] < front[rand_2] ):
-			new_data.append( data[rand_1] )
+			new_data.append( copy.deepcopy(data[rand_1]) )
 			tmp.remove(rand_1)
 		elif( front[rand_1] > front[rand_2] ):
-			new_data.append( data[rand_2] )
+			new_data.append( copy.deepcopy(data[rand_2]) )
 			tmp.remove(rand_2) 
 		elif( front[rand_1] == front[rand_2] ):
 			if( distances[rand_1] >= distances[rand_2] ):
-				new_data.append( data[rand_1] )
+				new_data.append( copy.deepcopy(data[rand_1]) )
 				tmp.remove(rand_1) 
 			else:
-				new_data.append( data[rand_2] )
+				new_data.append( copy.deepcopy(data[rand_2]) )
 				tmp.remove(rand_2) 
 
 	return new_data
@@ -353,58 +384,50 @@ def crowded_tournament_selection(frontiers, distances):
 def crowded_selection_tsp( frontiers):
 	global data
 	new_data = []
-	
 	while( True ):
 		for i in frontiers:
 			for j in i:
 				new_data.append( copy.deepcopy(data[j]) )
-				# print(len(new_data))
 				if( len(new_data) >= population_size ):
-					# print("asd")
 					return new_data
 
 def NSGAII_algorithm():
 	global data
 	iteration = 0
 	read_data()
-	generate_population()
-	fix_solutions( data )
+	generate_avid_solution()
+	corrective_function( data )
 	evaluate_population( data )
 
 	for i in range( n_iterations ):
 		print("+++ Iteration ", i)
 		for i in range( offspring_size ):
-			offspring = PBX_crossover(tournament_selection(),tournament_selection())
+			offspring = crossover_PBX(tournament_selection(),tournament_selection())
 			if( random.random() <= mutation_prob ):
 				mutation( offspring[0] )
 			if( random.random() <= mutation_prob ):
 				mutation( offspring[1] )
-			fix_solutions( offspring )
+			corrective_function( offspring )
 			evaluate_population( offspring )
 			data.append( copy.deepcopy(offspring[0]) )
 			data.append( copy.deepcopy(offspring[1]) )
-		print(len(data))
 		frontiers = non_dominated_sort()
-		# distances = crowding_distance( frontiers )
-		# new_data = crowded_tournament_selection( frontiers, distances )
-		new_data = []
-		new_data = crowded_selection_tsp( frontiers )
+		distances = crowding_distance( frontiers )
+		new_data = crowded_tournament_selection( frontiers, distances )
+		# new_data = []
+		# new_data = crowded_selection_tsp( frontiers )
 		# for i in frontiers[0]:
 		# 	new_data.append( data[i] )
 		data = []
 		data = copy.deepcopy( new_data )
-		print(frontiers)
 		for i in data:
 			print("cost  ", i["cost"], "\t delay  ", i["delay"])
-	print(data)
+	# print(data)
 
 
 if __name__ == "__main__":
-	a = crossover_PBX( {"solution":[2,0,1,5,4,0,0,3,0]},
-							{"solution":[0,3,1,0,2,0,4,0,5]})
-	print(a)
-	# NSGAII_algorithm()
-	# frontiers = non_dominated_sort()
+	NSGAII_algorithm()
+	frontiers = non_dominated_sort()
 
 	# pareto = []
 	# for i in frontiers[0]:
