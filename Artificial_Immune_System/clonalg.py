@@ -25,12 +25,10 @@ def problem( x, y ):
 	return x**2 + y**2
 
 def binary_to_x( binary_list ):
-
 	x = BitArray(binary_list[:16])
 	y = BitArray(binary_list[16:])
 	x = x.uint
 	y = y.uint
-
 	x = min_x + (( max_x - min_x ) * x ) / (( 2.**16 - 1. ))
 	y = min_y + (( max_y - min_y ) * y ) / (( 2.**16 - 1. ))
 
@@ -53,7 +51,7 @@ def affinity():
 		if max_f - min_f == 0 :
 			i["a"] = 1
 		else:
-			i["a"] = 1-i["func"]/( max_f - min_f )
+			i["a"] = 1-(i["func"]/( max_f - min_f ))
 
 def create_population():
 	for i in range( population_size ):
@@ -64,7 +62,10 @@ def clone_and_hypermutation():
 	for i in range( population_size ):
 		for j in range( n_clones ):
 			clone = copy.deepcopy( data[i] )
-			mutation_rate = math.exp(mutation_factor * clone["a"])
+			try:
+				mutation_rate = math.exp(mutation_factor * clone["a"])
+			except OverflowError:
+				mutation_rate = 0
 			for k in range (len( clone["binary"] )):
 				rand = random.random()
 				if( rand < mutation_rate ):
@@ -72,6 +73,9 @@ def clone_and_hypermutation():
 						clone["binary"][k] = 1
 					else:
 						clone["binary"][k] = 0
+			x_tmp, y_tmp = binary_to_x( clone["binary"] )
+			clone["x"] = x_tmp
+			clone["y"] = y_tmp
 			clone["func"] = problem( clone["x"], clone["y"] )
 			tmp.append( copy.deepcopy(clone) )
 	return tmp
@@ -94,12 +98,13 @@ def clonalg():
 		tmp = []
 		tmp = clone_and_hypermutation()
 		rnd_cells = create_random_cells()
+		
 		data = data + tmp + rnd_cells
 		sorted_data = sorted(data, key=lambda k: k["func"] )
 		data = []
 		for i in range( population_size ):
 			data.append( sorted_data[i] )
-			print(data[i])
+#			print(data[i])
 		sorted_data = []
 		if best_solution["func"] > data[0]["func"]:
 			best_solution = copy.deepcopy( data[0] )

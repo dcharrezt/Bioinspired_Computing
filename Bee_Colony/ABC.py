@@ -51,7 +51,8 @@ def get_new_solutions():
 		j = random.randint( 0, n_dimensions-1 )
 		k = random.randint( 0, n_solutions-1 )
 		for i in range( n_dimensions ):
-			if i == j:
+			# print(str(i)+" "+str(j)+" "+str(k))
+			if i==j:
 				tmp = solutions[m]["v"][i] +  phi * ( solutions[m]["v"][i] -
 					  					solutions[k]["v"][i] )
 				new_v  = [0]*n_dimensions
@@ -146,6 +147,7 @@ def abc():
 		for i in range( n_solutions ):
 			a = roulette_selection()
 			observer_solution( a )
+			
 		best_bee_index = check_scout_bee()
 
 		if best_bee_index >= 0:
